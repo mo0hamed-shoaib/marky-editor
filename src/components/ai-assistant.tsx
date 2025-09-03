@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Sparkles, Loader2, CheckCircle, AlertCircle, Plus, Wand2 } from "lucide-react"
 import { AIService, AIResponse } from "@/lib/ai-service"
+import { toast } from "sonner"
 
 interface AIAssistantProps {
   onAIResponse: (response: AIResponse) => void
@@ -28,12 +29,22 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
     
     try {
       const response = await aiFunction()
+      
+      if (response.error) {
+        toast.error(`AI Error: ${response.error}`)
+      } else if (response.content) {
+        toast.success("AI request completed successfully")
+      }
+      
       // Call onAIResponse to update the parent state
       onAIResponse(response)
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      toast.error(`Request failed: ${errorMessage}`)
+      
       const errorResponse = { 
         content: '', 
-        error: error instanceof Error ? error.message : 'Unknown error occurred' 
+        error: errorMessage
       }
       onAIResponse(errorResponse)
     } finally {
@@ -42,23 +53,35 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
   }
 
   const handleCreateMarkmap = () => {
-    if (!createPrompt.trim()) return
+    if (!createPrompt.trim()) {
+      toast.error("Please enter a description for the markmap")
+      return
+    }
     handleAIRequest(() => AIService.createMarkmap(createPrompt), 'create')
   }
 
   const handleConvertText = () => {
-    if (!convertText.trim()) return
+    if (!convertText.trim()) {
+      toast.error("Please enter text to convert")
+      return
+    }
     handleAIRequest(() => AIService.convertTextToMarkmap(convertText), 'convert')
   }
 
   const handleImproveMarkmap = () => {
-    if (!currentMarkdown.trim()) return
+    if (!currentMarkdown.trim()) {
+      toast.error("No markdown content to improve")
+      return
+    }
     handleAIRequest(() => AIService.improveMarkmap(currentMarkdown), 'improve')
   }
 
   const handleSuggestContent = () => {
-    if (!currentMarkdown.trim()) return
-    handleAIRequest(() => AIService.suggestContent(currentMarkdown), 'suggest')
+    if (!currentMarkdown.trim()) {
+      toast.error("No markdown content to suggest improvements for")
+      return
+    }
+      handleAIRequest(() => AIService.suggestContent(currentMarkdown), 'suggest')
   }
 
   return (
