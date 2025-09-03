@@ -10,11 +10,12 @@ import { toast } from "sonner"
 
 interface AIAssistantProps {
   onAIResponse: (response: AIResponse) => void
+  onApplyAIResponse: () => void
   currentMarkdown: string
   lastResponse: AIResponse | null
 }
 
-export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIAssistantProps) {
+export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, lastResponse }: AIAssistantProps) {
   const [loadingStates, setLoadingStates] = useState({
     create: false,
     convert: false,
@@ -31,15 +32,26 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
       const response = await aiFunction()
       
       if (response.error) {
-        toast.error(`AI Error: ${response.error}`)
+        toast.error(`AI Error: ${response.error}`, {
+          description: "Please try again or check your input",
+          duration: 5000,
+        })
+      } else if (response.content) {
+        // Show success toast when AI request completes successfully
+        toast.success("AI content generated successfully!", {
+          description: "Review and click 'Apply to Mindmap' to use it",
+          duration: 4000,
+        })
       }
-      // Don't show success toast here - let the main page handle it when content is applied
       
       // Call onAIResponse to update the parent state
       onAIResponse(response)
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
-      toast.error(`Request failed: ${errorMessage}`)
+      toast.error(`Request failed: ${errorMessage}`, {
+        description: "Network or API issue. Please try again.",
+        duration: 5000,
+      })
       
       const errorResponse = { 
         content: '', 
@@ -53,7 +65,10 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
 
   const handleCreateMarkmap = () => {
     if (!createPrompt.trim()) {
-      toast.error("Please enter a description for the markmap")
+      toast.error("Input Required", {
+        description: "Please enter a description for the markmap",
+        duration: 3000,
+      })
       return
     }
     handleAIRequest(() => AIService.createMarkmap(createPrompt), 'create')
@@ -61,7 +76,10 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
 
   const handleConvertText = () => {
     if (!convertText.trim()) {
-      toast.error("Please enter text to convert")
+      toast.error("Input Required", {
+        description: "Please enter text to convert",
+        duration: 3000,
+      })
       return
     }
     handleAIRequest(() => AIService.convertTextToMarkmap(convertText), 'convert')
@@ -69,7 +87,10 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
 
   const handleImproveMarkmap = () => {
     if (!currentMarkdown.trim()) {
-      toast.error("No markdown content to improve")
+      toast.error("No Content", {
+        description: "No markdown content to improve",
+        duration: 3000,
+      })
       return
     }
     handleAIRequest(() => AIService.improveMarkmap(currentMarkdown), 'improve')
@@ -77,7 +98,10 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
 
   const handleSuggestContent = () => {
     if (!currentMarkdown.trim()) {
-      toast.error("No markdown content to suggest improvements for")
+      toast.error("No Content", {
+        description: "No markdown content to suggest improvements for",
+        duration: 3000,
+      })
       return
     }
       handleAIRequest(() => AIService.suggestContent(currentMarkdown), 'suggest')
@@ -228,7 +252,7 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
                 <Button 
                   size="sm" 
                   className="w-full"
-                  onClick={() => onAIResponse(lastResponse)}
+                  onClick={onApplyAIResponse}
                 >
                   Apply to Mindmap
                 </Button>

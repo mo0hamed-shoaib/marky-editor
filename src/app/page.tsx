@@ -116,7 +116,10 @@ export default function MarkyPage() {
 
       if (!parentId) {
         setTreeData([...treeData, newNode])
-        toast.success("Added new root item")
+        toast.success("Item Added!", {
+          description: "New root item added to tree",
+          duration: 3000,
+        })
       } else {
         const updateChildren = (nodes: any[]): any[] => {
           return nodes.map(node => {
@@ -130,7 +133,10 @@ export default function MarkyPage() {
           })
         }
         setTreeData(updateChildren(treeData))
-        toast.success("Added new child item")
+        toast.success("Item Added!", {
+          description: "New child item added to tree",
+          duration: 3000,
+        })
       }
     } catch (error) {
       toast.error("Failed to add item. Please try again.")
@@ -165,7 +171,10 @@ export default function MarkyPage() {
         })
       }
       setTreeData(removeNode(treeData))
-      toast.success("Item deleted successfully")
+      toast.success("Item Deleted!", {
+        description: "Item removed from tree successfully",
+        duration: 3000,
+      })
     } catch (error) {
       toast.error("Failed to delete item. Please try again.")
       console.error("Delete node error:", error)
@@ -340,14 +349,22 @@ markmap:
       return
     }
     
-    if (response.content) {
+    // Don't automatically apply AI content - let user decide
+    // The AI response will be shown in the UI for review
+  }
+
+  // Manually apply AI response when user confirms
+  const applyAIResponse = () => {
+    if (lastAIResponse && lastAIResponse.content && !lastAIResponse.error) {
       try {
-        setMarkdownContent(response.content)
-        // Only show success toast when content is actually applied
-        toast.success("AI content applied to mindmap")
+        setMarkdownContent(lastAIResponse.content)
+        toast.success("Content Applied!", {
+          description: "AI content successfully applied to mindmap",
+          duration: 4000,
+        })
       } catch (error) {
         toast.error("Failed to apply AI response. Please try again.")
-        console.error("AI response error:", error)
+        console.error("Apply AI response error:", error)
       }
     }
   }
@@ -390,7 +407,10 @@ markmap:
           }
         }
         
-        toast.success(`Successfully imported "${file.name}"`)
+        toast.success("File Imported!", {
+          description: `Successfully imported "${file.name}"`,
+          duration: 4000,
+        })
       } catch (error) {
         toast.error("Failed to read file. Please try again.")
         console.error("Import error:", error)
@@ -411,7 +431,10 @@ markmap:
   const handleExport = () => {
     try {
       if (!markdownContent.trim()) {
-        toast.error("No content to export. Please add some content first.")
+        toast.error("No Content", {
+        description: "Please add some content before exporting",
+        duration: 3000,
+      })
         return
       }
       
@@ -426,7 +449,10 @@ markmap:
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       
-      toast.success(`Successfully exported "${mapTitle || 'mindmap'}.md"`)
+      toast.success("File Exported!", {
+        description: `Successfully exported "${mapTitle || 'mindmap'}.md"`,
+        duration: 4000,
+      })
     } catch (error) {
       toast.error("Failed to export file. Please try again.")
       console.error("Export error:", error)
@@ -554,6 +580,7 @@ markmap:
                  <div className="mt-4 px-2">
                   <AIAssistant
                     onAIResponse={handleAIResponse}
+                    onApplyAIResponse={applyAIResponse}
                     currentMarkdown={markdownContent}
                     lastResponse={lastAIResponse}
                   />
@@ -827,6 +854,7 @@ markmap:
           <div className="flex-1 px-4 pb-4 overflow-y-auto">
             <AIAssistant
               onAIResponse={handleAIResponse}
+              onApplyAIResponse={applyAIResponse}
               currentMarkdown={markdownContent}
               lastResponse={lastAIResponse}
             />
