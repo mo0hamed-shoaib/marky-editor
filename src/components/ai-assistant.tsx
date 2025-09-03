@@ -32,9 +32,8 @@ export function AIAssistant({ onAIResponse, currentMarkdown, lastResponse }: AIA
       
       if (response.error) {
         toast.error(`AI Error: ${response.error}`)
-      } else if (response.content) {
-        toast.success("AI request completed successfully")
       }
+      // Don't show success toast here - let the main page handle it when content is applied
       
       // Call onAIResponse to update the parent state
       onAIResponse(response)

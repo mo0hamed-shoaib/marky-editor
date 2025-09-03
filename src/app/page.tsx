@@ -335,15 +335,16 @@ markmap:
   const handleAIResponse = (response: AIResponse) => {
     setLastAIResponse(response)
     
+    // Don't show error toasts here - AI Assistant already handles them
     if (response.error) {
-      toast.error(`AI Error: ${response.error}`)
       return
     }
     
     if (response.content) {
       try {
         setMarkdownContent(response.content)
-        toast.success("AI response applied successfully")
+        // Only show success toast when content is actually applied
+        toast.success("AI content applied to mindmap")
       } catch (error) {
         toast.error("Failed to apply AI response. Please try again.")
         console.error("AI response error:", error)
@@ -368,9 +369,9 @@ markmap:
       return
     }
     
-    const reader = new FileReader()
+      const reader = new FileReader()
     
-    reader.onload = (e) => {
+      reader.onload = (e) => {
       try {
         const content = e.target?.result as string
         if (!content.trim()) {
@@ -400,7 +401,7 @@ markmap:
       toast.error("Failed to read file. Please try again.")
     }
     
-    reader.readAsText(file)
+      reader.readAsText(file)
     
     // Reset input value to allow re-importing the same file
     event.target.value = ""
@@ -691,7 +692,7 @@ markmap:
               placeholder="Enter your markdown content here..."
               className="h-full resize-none font-mono text-sm overflow-y-auto"
             />
-          </div>
+            </div>
         
         <div className="p-4 border-t space-y-2">
             <Button className="w-full" size="sm" disabled aria-label="Save mindmap (coming soon)">
