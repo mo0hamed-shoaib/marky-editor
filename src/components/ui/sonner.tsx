@@ -13,6 +13,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       richColors={true}
       closeButton={true}
       position="top-right"
+      duration={6000}
+      expand={true}
+      swipeDirection="right"
       style={
         {
           "--normal-bg": "var(--popover)",

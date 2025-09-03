@@ -34,13 +34,13 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
       if (response.error) {
         toast.error(`AI Error: ${response.error}`, {
           description: "Please try again or check your input",
-          duration: 5000,
+          duration: 8000,
         })
       } else if (response.content) {
         // Show success toast when AI request completes successfully
         toast.success("AI content generated successfully!", {
           description: "Review and click 'Apply to Mindmap' to use it",
-          duration: 4000,
+          duration: 7000,
         })
       }
       
@@ -50,7 +50,7 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
       toast.error(`Request failed: ${errorMessage}`, {
         description: "Network or API issue. Please try again.",
-        duration: 5000,
+        duration: 8000,
       })
       
       const errorResponse = { 
@@ -67,7 +67,7 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
     if (!createPrompt.trim()) {
       toast.error("Input Required", {
         description: "Please enter a description for the markmap",
-        duration: 3000,
+        duration: 5000,
       })
       return
     }
@@ -78,7 +78,7 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
     if (!convertText.trim()) {
       toast.error("Input Required", {
         description: "Please enter text to convert",
-        duration: 3000,
+        duration: 5000,
       })
       return
     }
@@ -89,7 +89,7 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
     if (!currentMarkdown.trim()) {
       toast.error("No Content", {
         description: "No markdown content to improve",
-        duration: 3000,
+        duration: 5000,
       })
       return
     }
@@ -100,7 +100,7 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
     if (!currentMarkdown.trim()) {
       toast.error("No Content", {
         description: "No markdown content to suggest improvements for",
-        duration: 3000,
+        duration: 5000,
       })
       return
     }

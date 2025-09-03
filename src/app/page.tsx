@@ -360,7 +360,7 @@ markmap:
         setMarkdownContent(lastAIResponse.content)
         toast.success("Content Applied!", {
           description: "AI content successfully applied to mindmap",
-          duration: 4000,
+          duration: 6000,
         })
       } catch (error) {
         toast.error("Failed to apply AI response. Please try again.")
@@ -409,7 +409,7 @@ markmap:
         
         toast.success("File Imported!", {
           description: `Successfully imported "${file.name}"`,
-          duration: 4000,
+          duration: 6000,
         })
       } catch (error) {
         toast.error("Failed to read file. Please try again.")
@@ -451,7 +451,7 @@ markmap:
       
       toast.success("File Exported!", {
         description: `Successfully exported "${mapTitle || 'mindmap'}.md"`,
-        duration: 4000,
+        duration: 6000,
       })
     } catch (error) {
       toast.error("Failed to export file. Please try again.")
