@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -207,6 +208,24 @@ textarea {
   
   .will-change-opacity {
     will-change: opacity;
+  }
+  
+  /* Mobile Scrolling Optimizations */
+  @media (max-width: 1024px) {
+    .overflow-y-auto {
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
+    }
+    
+    /* Ensure proper height constraints for mobile flex layouts */
+    .min-h-0 {
+      min-height: 0;
+    }
+    
+    /* Mobile-friendly tree node buttons */
+    .tree-node-buttons {
+      opacity: 1 !important;
+    }
   }
   
   /* Web Interface Guidelines - Decorative Elements */
