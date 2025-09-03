@@ -22,7 +22,7 @@ function renderToolbar(mm: Markmap, wrapper: HTMLElement) {
 
 export function MarkmapViewer({ markdown, className }: MarkmapViewerProps) {
   const refSvg = useRef<SVGSVGElement>(null);
-  const refMm = useRef<Markmap>();
+  const refMm = useRef<Markmap | null>(null);
   const refToolbar = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
