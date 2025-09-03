@@ -30,6 +30,7 @@ import {
 import { AIAssistant } from "@/components/ai-assistant"
 import { AIResponse } from "@/lib/ai-service"
 import { MarkmapViewer } from "@/components/markmap-viewer"
+import { toast } from "sonner"
 
 export default function MarkyPage() {
   const [markdownContent, setMarkdownContent] = useState(`# Marky
@@ -105,28 +106,35 @@ export default function MarkyPage() {
 
   // Tree editor functions
   const addNode = (parentId: string | null, level: number) => {
-    const newNode = {
-      id: Date.now().toString(),
-      text: 'New Item',
-      level: level,
-      children: []
-    }
-
-    if (!parentId) {
-      setTreeData([...treeData, newNode])
-    } else {
-      const updateChildren = (nodes: any[]): any[] => {
-        return nodes.map(node => {
-          if (node.id === parentId) {
-            return { ...node, children: [...node.children, newNode] }
-          }
-          if (node.children) {
-            return { ...node, children: updateChildren(node.children) }
-          }
-          return node
-        })
+    try {
+      const newNode = {
+        id: Date.now().toString(),
+        text: 'New Item',
+        level: level,
+        children: []
       }
-      setTreeData(updateChildren(treeData))
+
+      if (!parentId) {
+        setTreeData([...treeData, newNode])
+        toast.success("Added new root item")
+      } else {
+        const updateChildren = (nodes: any[]): any[] => {
+          return nodes.map(node => {
+            if (node.id === parentId) {
+              return { ...node, children: [...node.children, newNode] }
+            }
+            if (node.children) {
+              return { ...node, children: updateChildren(node.children) }
+            }
+            return node
+          })
+        }
+        setTreeData(updateChildren(treeData))
+        toast.success("Added new child item")
+      }
+    } catch (error) {
+      toast.error("Failed to add item. Please try again.")
+      console.error("Add node error:", error)
     }
   }
 
@@ -146,16 +154,22 @@ export default function MarkyPage() {
   }
 
   const deleteNode = (id: string) => {
-    const removeNode = (nodes: any[]): any[] => {
-      return nodes.filter(node => {
-        if (node.id === id) return false
-        if (node.children) {
-          node.children = removeNode(node.children)
-        }
-        return true
-      })
+    try {
+      const removeNode = (nodes: any[]): any[] => {
+        return nodes.filter(node => {
+          if (node.id === id) return false
+          if (node.children) {
+            node.children = removeNode(node.children)
+          }
+          return true
+        })
+      }
+      setTreeData(removeNode(treeData))
+      toast.success("Item deleted successfully")
+    } catch (error) {
+      toast.error("Failed to delete item. Please try again.")
+      console.error("Delete node error:", error)
     }
-    setTreeData(removeNode(treeData))
   }
 
   // Convert tree to markdown
@@ -320,19 +334,52 @@ markmap:
   // Handle AI response
   const handleAIResponse = (response: AIResponse) => {
     setLastAIResponse(response)
-    if (response.content && !response.error) {
-      setMarkdownContent(response.content)
+    
+    if (response.error) {
+      toast.error(`AI Error: ${response.error}`)
+      return
+    }
+    
+    if (response.content) {
+      try {
+        setMarkdownContent(response.content)
+        toast.success("AI response applied successfully")
+      } catch (error) {
+        toast.error("Failed to apply AI response. Please try again.")
+        console.error("AI response error:", error)
+      }
     }
   }
 
   // Handle file import
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
-    if (file) {
-      const reader = new FileReader()
-      reader.onload = (e) => {
+    if (!file) return
+    
+    // Validate file type
+    if (!file.name.endsWith('.md') && !file.name.endsWith('.markdown')) {
+      toast.error("Invalid file type. Please select a markdown (.md) file.")
+      return
+    }
+    
+    // Validate file size (max 1MB)
+    if (file.size > 1024 * 1024) {
+      toast.error("File too large. Please select a file smaller than 1MB.")
+      return
+    }
+    
+    const reader = new FileReader()
+    
+    reader.onload = (e) => {
+      try {
         const content = e.target?.result as string
+        if (!content.trim()) {
+          toast.error("File is empty. Please select a file with content.")
+          return
+        }
+        
         setMarkdownContent(content)
+        
         // Extract title from first heading if available
         const lines = content.split('\n')
         for (const line of lines) {
@@ -341,23 +388,48 @@ markmap:
             break
           }
         }
+        
+        toast.success(`Successfully imported "${file.name}"`)
+      } catch (error) {
+        toast.error("Failed to read file. Please try again.")
+        console.error("Import error:", error)
       }
-      reader.readAsText(file)
     }
+    
+    reader.onerror = () => {
+      toast.error("Failed to read file. Please try again.")
+    }
+    
+    reader.readAsText(file)
+    
+    // Reset input value to allow re-importing the same file
+    event.target.value = ""
   }
 
   // Handle file export
   const handleExport = () => {
-    const content = markdownContent
-    const blob = new Blob([content], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${mapTitle || 'mindmap'}.md`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    try {
+      if (!markdownContent.trim()) {
+        toast.error("No content to export. Please add some content first.")
+        return
+      }
+      
+      const content = markdownContent
+      const blob = new Blob([content], { type: 'text/markdown' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `${mapTitle || 'mindmap'}.md`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+      
+      toast.success(`Successfully exported "${mapTitle || 'mindmap'}.md"`)
+    } catch (error) {
+      toast.error("Failed to export file. Please try again.")
+      console.error("Export error:", error)
+    }
   }
     
     return (
@@ -386,16 +458,30 @@ markmap:
                  <div className="space-y-4 mt-4 px-2">
                   <div className="space-y-2">
                     <Label htmlFor="mobile-title">Map Title</Label>
-                    <Input
-                      id="mobile-title"
-                      value={mapTitle}
-                      onChange={(e) => setMapTitle(e.target.value)}
-                      placeholder="Enter map title..."
-                      className="font-medium"
-                      minLength={1}
-                      required
-                      aria-describedby="mobile-title-error"
-                    />
+                                <Input
+              id="mobile-title"
+              value={mapTitle}
+              onChange={(e) => {
+                const value = e.target.value
+                setMapTitle(value)
+                
+                // Validate title length
+                if (value.length > 100) {
+                  toast.error("Map title is too long. Please keep it under 100 characters.")
+                  return
+                }
+                
+                // Validate title content
+                if (value.trim() && value.length < 3) {
+                  toast.warning("Map title is quite short. Consider a more descriptive name.")
+                }
+              }}
+              placeholder="Enter map title..."
+              className="font-medium"
+              minLength={1}
+              required
+              aria-describedby="mobile-title-error"
+            />
                     {!mapTitle.trim() && (
                       <p id="mobile-title-error" className="text-xs text-destructive">
                         Map title is required
@@ -513,10 +599,21 @@ markmap:
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          if (markdownContent.trim()) {
-                            setShowOverwriteDialog(true)
-                          } else {
-                            setMarkdownContent(treeToMarkdown(treeData))
+                          try {
+                            if (markdownContent.trim()) {
+                              setShowOverwriteDialog(true)
+                            } else {
+                              const markdown = treeToMarkdown(treeData)
+                              if (markdown.trim()) {
+                                setMarkdownContent(markdown)
+                                toast.success("Tree converted to markdown successfully")
+                              } else {
+                                toast.error("No tree data to convert")
+                              }
+                            }
+                          } catch (error) {
+                            toast.error("Failed to convert tree to markdown. Please try again.")
+                            console.error("Conversion error:", error)
                           }
                         }}
                         className="flex items-center gap-2"
@@ -558,7 +655,21 @@ markmap:
             <Input
               id="title"
               value={mapTitle}
-              onChange={(e) => setMapTitle(e.target.value)}
+              onChange={(e) => {
+                const value = e.target.value
+                setMapTitle(value)
+                
+                // Validate title length
+                if (value.length > 100) {
+                  toast.error("Map title is too long. Please keep it under 100 characters.")
+                  return
+                }
+                
+                // Validate title content
+                if (value.trim() && value.length < 3) {
+                  toast.warning("Map title is quite short. Consider a more descriptive name.")
+                }
+              }}
               placeholder="Enter map title..."
               className="font-medium"
                 minLength={1}
@@ -662,10 +773,21 @@ markmap:
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          if (markdownContent.trim()) {
-                            setShowOverwriteDialog(true)
-                          } else {
-                            setMarkdownContent(treeToMarkdown(treeData))
+                          try {
+                            if (markdownContent.trim()) {
+                              setShowOverwriteDialog(true)
+                            } else {
+                              const markdown = treeToMarkdown(treeData)
+                              if (markdown.trim()) {
+                                setMarkdownContent(markdown)
+                                toast.success("Tree converted to markdown successfully")
+                              } else {
+                                toast.error("No tree data to convert")
+                              }
+                            }
+                          } catch (error) {
+                            toast.error("Failed to convert tree to markdown. Please try again.")
+                            console.error("Conversion error:", error)
                           }
                         }}
                         className="flex items-center gap-2"
@@ -730,8 +852,19 @@ markmap:
             </Button>
             <Button
               onClick={() => {
-                setMarkdownContent(treeToMarkdown(treeData))
-                setShowOverwriteDialog(false)
+                try {
+                  const markdown = treeToMarkdown(treeData)
+                  if (markdown.trim()) {
+                    setMarkdownContent(markdown)
+                    setShowOverwriteDialog(false)
+                    toast.success("Markdown content updated successfully")
+                  } else {
+                    toast.error("No tree data to convert")
+                  }
+                } catch (error) {
+                  toast.error("Failed to update markdown content. Please try again.")
+                  console.error("Overwrite error:", error)
+                }
               }}
             >
               Overwrite Content
