@@ -32,6 +32,14 @@ import { AIResponse } from "@/lib/ai-service"
 import { MarkmapViewer } from "@/components/markmap-viewer"
 import { toast } from "sonner"
 
+// Define proper types for tree nodes
+interface TreeNode {
+  id: string
+  text: string
+  level: number
+  children: TreeNode[]
+}
+
 export default function MarkyPage() {
   const [markdownContent, setMarkdownContent] = useState(`# Marky
 ## Getting Started
@@ -57,7 +65,7 @@ export default function MarkyPage() {
   const [lastAIResponse, setLastAIResponse] = useState<AIResponse | null>(null)
   
   // Tree structure for the outline editor
-  const [treeData, setTreeData] = useState([
+  const [treeData, setTreeData] = useState<TreeNode[]>([
     {
       id: '1',
       text: 'Getting Started',
@@ -121,7 +129,7 @@ export default function MarkyPage() {
           duration: 3000,
         })
       } else {
-        const updateChildren = (nodes: any[]): any[] => {
+        const updateChildren = (nodes: TreeNode[]): TreeNode[] => {
           return nodes.map(node => {
             if (node.id === parentId) {
               return { ...node, children: [...node.children, newNode] }
@@ -145,7 +153,7 @@ export default function MarkyPage() {
   }
 
   const updateNodeText = (id: string, newText: string) => {
-    const updateNodes = (nodes: any[]): any[] => {
+    const updateNodes = (nodes: TreeNode[]): TreeNode[] => {
       return nodes.map(node => {
         if (node.id === id) {
           return { ...node, text: newText }
@@ -161,7 +169,7 @@ export default function MarkyPage() {
 
   const deleteNode = (id: string) => {
     try {
-      const removeNode = (nodes: any[]): any[] => {
+      const removeNode = (nodes: TreeNode[]): TreeNode[] => {
         return nodes.filter(node => {
           if (node.id === id) return false
           if (node.children) {
@@ -182,7 +190,7 @@ export default function MarkyPage() {
   }
 
   // Convert tree to markdown
-  const treeToMarkdown = (nodes: any[], depth: number = 0, isRoot: boolean = true): string => {
+  const treeToMarkdown = (nodes: TreeNode[], depth: number = 0, isRoot: boolean = true): string => {
     let markdown = ''
     if (isRoot) {
       markdown = `---
@@ -213,8 +221,8 @@ markmap:
   // Convert markdown to tree data structure
   const markdownToTree = (markdown: string) => {
     const lines = markdown.split('\n').filter(line => line.trim())
-    const tree: any[] = []
-    const stack: { node: any; level: number }[] = []
+    const tree: TreeNode[] = []
+    const stack: { node: TreeNode; level: number }[] = []
     
     lines.forEach(line => {
       const trimmedLine = line.trim()
@@ -282,7 +290,7 @@ markmap:
   }
 
   // Render tree node component
-  const renderTreeNode = (node: any, depth: number = 0) => {
+  const renderTreeNode = (node: TreeNode, depth: number = 0) => {
     const marginLeft = depth * 20
     
     return (
@@ -333,7 +341,7 @@ markmap:
         
         {node.children && node.children.length > 0 && (
           <div className="space-y-1">
-            {node.children.map((child: any) => renderTreeNode(child, depth + 1))}
+            {node.children.map((child: TreeNode) => renderTreeNode(child, depth + 1))}
           </div>
         )}
       </div>

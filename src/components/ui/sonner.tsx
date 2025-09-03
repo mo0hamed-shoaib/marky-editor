@@ -12,7 +12,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       className="toaster group"
       richColors={true}
       closeButton={true}
-      position="top-right"
+      position="bottom-right"
       duration={6000}
       expand={true}
       swipeDirection="right"
