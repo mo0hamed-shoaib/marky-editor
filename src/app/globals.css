@@ -115,8 +115,13 @@
 
 /* Web Interface Guidelines - Selection Styling */
 ::selection {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: #042f2e; /* mint-300 - light mint green */
+  color: #2dd4bf; /* mint-900 - dark green for contrast */
+}
+
+::-moz-selection {
+  background-color: #042f2e; /* mint-300 - light mint green */
+  color: #2dd4bf; /* mint-900 - dark green for contrast */
 }
 
 body {
@@ -300,16 +305,7 @@ svg[ref="markmap-svg"] {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Markmap Text Selection - Mint Green */
-svg[ref="markmap-svg"] ::selection {
-  background-color: #a7f3d0; /* mint-200 - light mint green */
-  color: #064e3b; /* emerald-900 - dark green for contrast */
-}
 
-svg[ref="markmap-svg"] ::-moz-selection {
-  background-color: #a7f3d0; /* mint-200 - light mint green */
-  color: #064e3b; /* emerald-900 - dark green for contrast */
-}
 
 [data-sonner-toaster][data-theme="dark"] {
   --toast-success-background: #059669;
