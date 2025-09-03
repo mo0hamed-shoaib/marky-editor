@@ -680,7 +680,7 @@ markmap:
       {/* Desktop Layout: Side-by-side (3 columns) */}
       <div className="hidden lg:flex bg-background h-full w-full">
       {/* Left Sidebar - Markdown Editor */}
-      <div className="w-80 border-r bg-muted/30 flex flex-col">
+      <div className="w-100 border-r bg-muted/30 flex flex-col">
         <div className="p-4 border-b">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
@@ -851,7 +851,7 @@ markmap:
       </div>
 
       {/* Right Sidebar - AI Assistant */}
-      <div className="w-96 border-l bg-muted/30 flex flex-col">
+      <div className="w-100 border-l bg-muted/30 flex flex-col">
           <div className="px-4 pt-4 pb-2">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-muted-foreground" />
