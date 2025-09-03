@@ -211,22 +211,59 @@ textarea {
   }
   
   /* Mobile Scrolling Optimizations */
-  @media (max-width: 1024px) {
-    .overflow-y-auto {
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: thin;
-    }
-    
-    /* Ensure proper height constraints for mobile flex layouts */
-    .min-h-0 {
-      min-height: 0;
-    }
-    
-    /* Mobile-friendly tree node buttons */
-    .tree-node-buttons {
-      opacity: 1 !important;
-    }
+@media (max-width: 1024px) {
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
   }
+  
+  /* Ensure proper height constraints for mobile flex layouts */
+  .min-h-0 {
+    min-height: 0;
+  }
+  
+  /* Mobile-friendly tree node buttons */
+  .tree-node-buttons {
+    opacity: 1 !important;
+  }
+}
+
+/* Sonner Toast Customization */
+[data-sonner-toaster][data-theme="light"] {
+  --toast-success-background: #10b981;
+  --toast-success-border: #059669;
+  --toast-success-foreground: #ffffff;
+  
+  --toast-error-background: #ef4444;
+  --toast-error-border: #dc2626;
+  --toast-error-foreground: #ffffff;
+  
+  --toast-warning-background: #f59e0b;
+  --toast-warning-border: #d97706;
+  --toast-warning-foreground: #ffffff;
+  
+  --toast-info-background: #3b82f6;
+  --toast-info-border: #2563eb;
+  --toast-info-foreground: #ffffff;
+}
+
+[data-sonner-toaster][data-theme="dark"] {
+  --toast-success-background: #059669;
+  --toast-success-border: #047857;
+  --toast-success-foreground: #ffffff;
+  
+  --toast-error-background: #dc2626;
+  --toast-error-border: #b91c1c;
+  --toast-error-foreground: #ffffff;
+  
+  --toast-warning-background: #d97706;
+  --toast-warning-border: #b45309;
+  --toast-warning-foreground: #ffffff;
+  
+  --toast-info-background: #2563eb;
+  --toast-info-border: #1d4ed8;
+  --toast-info-foreground: #ffffff;
+}
   
   /* Web Interface Guidelines - Decorative Elements */
   .decorative {
