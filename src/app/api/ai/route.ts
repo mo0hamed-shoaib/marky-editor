@@ -54,6 +54,30 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Log the request details for debugging
+    const requestBody = {
+      model: 'openai/gpt-4o-mini',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt || 'You are an AI assistant that helps users create and expand mindmaps. Always respond with clear, structured content that can be easily converted to markdown format.'
+        },
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.7
+    }
+    
+    console.log('Making OpenRouter API request:', {
+      url: OPENROUTER_URL,
+      model: requestBody.model,
+      hasApiKey: !!OPENROUTER_API_KEY,
+      apiKeyPrefix: OPENROUTER_API_KEY?.substring(0, 10) + '...'
+    })
+    
     // Make request to OpenRouter
     const response = await fetch(OPENROUTER_URL, {
       method: 'POST',
@@ -63,25 +87,18 @@ export async function POST(request: NextRequest) {
         'HTTP-Referer': request.headers.get('origin') || 'http://localhost:3000',
         'X-Title': 'Marky - AI Mindmap Assistant'
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.0-flash-exp:free',
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt || 'You are an AI assistant that helps users create and expand mindmaps. Always respond with clear, structured content that can be easily converted to markdown format.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        max_tokens: 1000,
-        temperature: 0.7
-      })
+      body: JSON.stringify(requestBody)
     })
 
     if (!response.ok) {
-      throw new Error(`OpenRouter API request failed: ${response.status}`)
+      const errorText = await response.text()
+      console.error('OpenRouter API error details:', {
+        status: response.status,
+        statusText: response.statusText,
+        headers: Object.fromEntries(response.headers.entries()),
+        body: errorText
+      })
+      throw new Error(`OpenRouter API request failed: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
