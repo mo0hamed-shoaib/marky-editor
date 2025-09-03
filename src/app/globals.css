@@ -295,6 +295,46 @@ textarea {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Markmap Theme Customization */
+.markmap-svg {
+  background: var(--markmap-background, #ffffff);
+  transition: background-color 0.3s ease;
+}
+
+.markmap-svg .markmap-node {
+  fill: var(--markmap-node-fill, #ffffff) !important;
+  stroke: var(--markmap-node-stroke, #d1d5db) !important;
+  transition: fill 0.3s ease, stroke 0.3s ease;
+}
+
+.markmap-svg .markmap-link {
+  stroke: var(--markmap-link-stroke, #9ca3af) !important;
+  transition: stroke 0.3s ease;
+}
+
+.markmap-svg .markmap-node-text {
+  fill: var(--markmap-text-fill, #111827) !important;
+  transition: fill 0.3s ease;
+}
+
+/* Dark theme overrides */
+[data-theme="dark"] .markmap-svg {
+  --markmap-background: #111827;
+}
+
+[data-theme="dark"] .markmap-svg .markmap-node {
+  --markmap-node-fill: #1f2937;
+  --markmap-node-stroke: #4b5563;
+}
+
+[data-theme="dark"] .markmap-svg .markmap-link {
+  --markmap-link-stroke: #6b7280;
+}
+
+[data-theme="dark"] .markmap-svg .markmap-node-text {
+  --markmap-text-fill: #f9fafb;
+}
+
 [data-sonner-toaster][data-theme="dark"] {
   --toast-success-background: #059669;
   --toast-success-border: #047857;
