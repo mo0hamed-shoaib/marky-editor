@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import {
+import { 
   Dialog,
   DialogContent,
   DialogDescription,
@@ -16,6 +16,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { 
   FileText, 
   Map, 
@@ -49,7 +50,7 @@ export default function MarkyPage() {
 - Auto-expansion
 - Free API usage`)
 
-    const [mapTitle, setMapTitle] = useState("Untitled Mindmap")
+  const [mapTitle, setMapTitle] = useState("Untitled Mindmap")
   const [activeView, setActiveView] = useState<"tree" | "markmap">("tree")
   const [showOverwriteDialog, setShowOverwriteDialog] = useState(false)
   const [lastAIResponse, setLastAIResponse] = useState<AIResponse | null>(null)
@@ -157,13 +158,9 @@ export default function MarkyPage() {
     setTreeData(removeNode(treeData))
   }
 
-  // Convert tree data to markdown format with proper nesting
-  // Following the principle: Headers for structure (0-2), Lists for content (3+)
-  // This works around Markmap's limitation with deep header nesting
+  // Convert tree to markdown
   const treeToMarkdown = (nodes: any[], depth: number = 0, isRoot: boolean = true): string => {
     let markdown = ''
-    
-    // Only add YAML frontmatter at the root level
     if (isRoot) {
       markdown = `---
 title: Tree Structure
@@ -174,28 +171,21 @@ markmap:
 
 `
     }
-    
     nodes.forEach(node => {
       if (depth <= 2) {
-        // Use headers for first 3 structural levels (depth 0, 1, 2)
         const headingLevel = depth + 1
         const headingMark = '#'.repeat(headingLevel)
         markdown += `${headingMark} ${node.text}\n\n`
       } else {
-        // Use indented lists for deeper levels (depth 3+) - Markmap handles these better
-        const indent = '  '.repeat(depth - 3) // Start list indentation from depth 3
+        const indent = '  '.repeat(depth - 3)
         markdown += `${indent}- ${node.text}\n`
       }
-      
-      // Recursively process children with incremented depth, but not as root
       if (node.children && node.children.length > 0) {
         markdown += treeToMarkdown(node.children, depth + 1, false)
       }
     })
     return markdown
   }
-
-
 
   // Convert markdown to tree data structure
   const markdownToTree = (markdown: string) => {
@@ -296,22 +286,24 @@ markmap:
             placeholder="Enter text..."
           />
           
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 hover:opacity-100 focus-within:opacity-100 transition-opacity tree-node-buttons">
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0"
               onClick={() => addNode(node.id, node.level + 1)}
+              className="h-6 w-6 p-0"
+              aria-label="Add child node"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3 w-3" />
             </Button>
             <Button
               size="sm"
               variant="ghost"
-              className="h-6 w-6 p-0 text-destructive"
               onClick={() => deleteNode(node.id)}
+              className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+              aria-label="Delete node"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3 w-3" />
             </Button>
           </div>
         </div>
@@ -324,7 +316,8 @@ markmap:
       </div>
     )
   }
-  
+
+  // Handle AI response
   const handleAIResponse = (response: AIResponse) => {
     setLastAIResponse(response)
     if (response.content && !response.error) {
@@ -332,16 +325,7 @@ markmap:
     }
   }
 
-  const handleExport = () => {
-    const blob = new Blob([markdownContent], { type: 'text/markdown' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${mapTitle}.md`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
+  // Handle file import
   const handleImport = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
@@ -349,259 +333,226 @@ markmap:
       reader.onload = (e) => {
         const content = e.target?.result as string
         setMarkdownContent(content)
-        setMapTitle(file.name.replace('.md', ''))
-        // Also convert to tree structure for immediate editing
-        setTreeData(markdownToTree(content))
+        // Extract title from first heading if available
+        const lines = content.split('\n')
+        for (const line of lines) {
+          if (line.startsWith('# ')) {
+            setMapTitle(line.substring(2).trim())
+            break
+          }
+        }
       }
       reader.readAsText(file)
     }
   }
 
-  // Enhanced function to render markdown as a tree
-  const renderTreeView = () => {
-    const lines = markdownContent.split('\n').filter(line => line.trim())
+  // Handle file export
+  const handleExport = () => {
+    const content = markdownContent
+    const blob = new Blob([content], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${mapTitle || 'mindmap'}.md`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
     
     return (
-      <div className="h-full p-4 overflow-y-auto space-y-2">
-        {lines.map((line, index) => {
-          const trimmedLine = line.trim()
-          if (!trimmedLine) return null
-          
-          // Check for different markdown elements
-          const headerMatch = trimmedLine.match(/^(#+)\s+(.+)/)
-          const listMatch = trimmedLine.match(/^([-*+])\s+(.+)/)
-          const numberedListMatch = trimmedLine.match(/^(\d+\.)\s+(.+)/)
-          const frontmatterMatch = trimmedLine.match(/^---$/)
-          const codeBlockMatch = trimmedLine.match(/^```(\w+)?$/)
-          const tableHeaderMatch = trimmedLine.match(/^\|(.+)\|$/)
-          const tableSeparatorMatch = trimmedLine.match(/^\|[\s\-:|]+\|$/)
-          const imageMatch = trimmedLine.match(/^!\[([^\]]*)\]\(([^)]+)\)/)
-          const linkMatch = trimmedLine.match(/^\[([^\]]+)\]\(([^)]+)\)/)
-          
-          if (frontmatterMatch) {
-            // Frontmatter delimiter - treat as metadata section
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  Frontmatter Metadata
-                </span>
+    <div className="flex flex-col lg:flex-row bg-background h-full">
+      {/* Mobile Layout: Stacked (Markdown Editor on top, View on bottom) */}
+      <div className="lg:hidden flex flex-col h-full">
+        {/* Mobile Header with Sheet Triggers */}
+        <div className="flex items-center justify-between p-4 border-b bg-muted/20">
+          <div className="flex items-center gap-3">
+            <Map className="h-5 w-5 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Mindmap Workspace</h2>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Markdown Editor Sheet */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Editor
+                </Button>
+              </SheetTrigger>
+                             <SheetContent side="left" className="w-full sm:w-96 overflow-y-auto">
+                 <SheetHeader>
+                   <SheetTitle>Markdown Editor</SheetTitle>
+                 </SheetHeader>
+                 <div className="space-y-4 mt-4 px-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="mobile-title">Map Title</Label>
+                    <Input
+                      id="mobile-title"
+                      value={mapTitle}
+                      onChange={(e) => setMapTitle(e.target.value)}
+                      placeholder="Enter map title..."
+                      className="font-medium"
+                      minLength={1}
+                      required
+                      aria-describedby="mobile-title-error"
+                    />
+                    {!mapTitle.trim() && (
+                      <p id="mobile-title-error" className="text-xs text-destructive">
+                        Map title is required
+                      </p>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="mobile-markdown">Markdown Content</Label>
+                    <Textarea
+                      id="mobile-markdown"
+                      value={markdownContent}
+                      onChange={(e) => setMarkdownContent(e.target.value)}
+                      placeholder="Enter your markdown content here..."
+                      className="min-h-[200px] resize-none font-mono text-sm"
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Button className="w-full" size="sm" disabled aria-label="Save mindmap (coming soon)">
+                      <Save className="h-4 w-4 mr-2" />
+                      Save (Coming Soon)
+                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" asChild>
+                        <label className="cursor-pointer" aria-label="Import markdown file">
+                          <Upload className="h-4 w-4 mr-2" />
+                          Import
+                          <input
+                            type="file"
+                            accept=".md,.markdown"
+                            onChange={handleImport}
+                            className="hidden"
+                            aria-describedby="mobile-import-description"
+                          />
+                        </label>
+                      </Button>
+                      <p id="mobile-import-description" className="sr-only">
+                        Import a markdown file to load existing mindmap content
+                      </p>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1" 
+                        onClick={handleExport}
+                        aria-label="Export mindmap as markdown file"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Export
+                      </Button>
+                    </div>
+                  </div>
               </div>
-            )
-          } else if (codeBlockMatch) {
-            // Code block delimiter
-            const language = codeBlockMatch[1] || 'code'
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  Code Block ({language})
-                </span>
-              </div>
-            )
-          } else if (tableHeaderMatch) {
-            // Table header
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  Table Header
-                </span>
-              </div>
-            )
-          } else if (tableSeparatorMatch) {
-            // Table separator row
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-muted/20 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-orange-400"></div>
-                <span className="text-sm text-muted-foreground">
-                  Table Separator
-                </span>
-              </div>
-            )
-          } else if (imageMatch) {
-            // Image
-            const altText = imageMatch[1] || 'Image'
-            const src = imageMatch[2]
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  🖼️ {altText}
-                </span>
-                <span className="text-xs text-muted-foreground ml-2">
-                  ({src})
-                </span>
-              </div>
-            )
-          } else if (linkMatch) {
-            // Link
-            const linkText = linkMatch[1]
-            const url = linkMatch[2]
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-muted/30 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-                <span className="text-sm font-medium text-muted-foreground">
-                  🔗 {linkText}
-                </span>
-                <span className="text-xs text-muted-foreground ml-2">
-                  ({url})
-                </span>
-              </div>
-            )
-          } else if (headerMatch) {
-            // Header line - count # to determine level
-            const level = headerMatch[1].length
-            const text = headerMatch[2].trim()
-            const marginLeft = (level - 1) * 20
-            
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border transition-colors"
-                style={{ marginLeft: `${marginLeft}px` }}
-              >
-                <div className={`w-2 h-2 rounded-full ${level === 1 ? 'bg-primary' : level === 2 ? 'bg-secondary' : 'bg-muted-foreground'}`}></div>
-                <span className={`font-medium ${level === 1 ? 'text-lg' : level === 2 ? 'text-base' : 'text-sm'}`}>
-                  {text}
-                </span>
-              </div>
-            )
-          } else if (listMatch) {
-            // Unordered list item - treat as level 4 or next level after parent
-            const bullet = listMatch[1]
-            const text = listMatch[2].trim()
-            
-            // Find the previous header level to determine this list item's level
-            let listLevel = 4 // Default to level 4
-            for (let i = index - 1; i >= 0; i--) {
-              const prevLine = lines[i].trim()
-              const prevHeaderMatch = prevLine.match(/^(#+)\s+(.+)/)
-              if (prevHeaderMatch) {
-                listLevel = prevHeaderMatch[1].length + 1
-                break
-              }
-            }
-            
-            const marginLeft = (listLevel - 1) * 20
-            
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-card/50 hover:bg-accent/50 transition-colors"
-                style={{ marginLeft: `${marginLeft}px` }}
-              >
-                <div className="w-2 h-2 rounded-full bg-accent-foreground"></div>
-                <span className="text-sm">{bullet} {text}</span>
-              </div>
-            )
-          } else if (numberedListMatch) {
-            // Numbered list item - treat as level 4 or next level after parent
-            const number = numberedListMatch[1]
-            const text = numberedListMatch[2].trim()
-            
-            // Find the previous header level to determine this list item's level
-            let listLevel = 4 // Default to level 4
-            for (let i = index - 1; i >= 0; i--) {
-              const prevLine = lines[i].trim()
-              const prevHeaderMatch = prevLine.match(/^(#+)\s+(.+)/)
-              if (prevHeaderMatch) {
-                listLevel = prevHeaderMatch[1].length + 1
-                break
-              }
-            }
-            
-            const marginLeft = (listLevel - 1) * 20
-            
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-card/50 hover:bg-accent/50 transition-colors"
-                style={{ marginLeft: `${marginLeft}px` }}
-              >
-                <div className="w-2 h-2 rounded-full bg-accent-foreground"></div>
-                <span className="text-sm">{number} {text}</span>
-              </div>
-            )
-          } else if (trimmedLine.startsWith('|') && trimmedLine.endsWith('|')) {
-            // Table row (not header or separator)
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-muted/20 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-orange-300"></div>
-                <span className="text-sm text-muted-foreground">
-                  Table Row
-                </span>
-              </div>
-            )
-          } else if (trimmedLine.startsWith('```') && trimmedLine.length > 3) {
-            // Inline code block content
-            return (
-              <div 
-                key={index} 
-                className="flex items-center gap-2 p-2 rounded-lg border bg-muted/20 transition-colors"
-              >
-                <div className="w-2 h-2 rounded-full bg-purple-400"></div>
-                <span className="text-sm text-muted-foreground font-mono">
-                  Code Content
-                </span>
-              </div>
-            )
-          } else if (trimmedLine.includes(':') && !trimmedLine.includes('|') && !trimmedLine.includes('```') && !trimmedLine.includes('![') && !trimmedLine.includes('[') && !trimmedLine.startsWith('#')) {
-            // Frontmatter content line (key: value format)
-            return (
-              <div 
-                key={index} 
-                className="ml-8 p-2 text-sm text-muted-foreground border-l-2 border-blue-200 pl-4"
-              >
-                {trimmedLine}
-              </div>
-            )
-          } else {
-            // Regular text line - treat as content of the previous node
-            return (
-              <div 
-                key={index} 
-                className="ml-12 p-2 text-sm text-muted-foreground border-l-2 border-muted pl-4"
-              >
-                {trimmedLine}
-              </div>
-            )
-          }
-        })}
-      </div>
-    )
-  }
+              </SheetContent>
+            </Sheet>
 
-  return (
-    <div className="flex bg-background h-full">
+            {/* AI Assistant Sheet */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  AI
+                </Button>
+              </SheetTrigger>
+                             <SheetContent side="right" className="w-full sm:w-96 overflow-y-auto">
+                 <SheetHeader>
+                   <SheetTitle>AI Assistant</SheetTitle>
+                 </SheetHeader>
+                 <div className="mt-4 px-2">
+                  <AIAssistant
+                    onAIResponse={handleAIResponse}
+                    currentMarkdown={markdownContent}
+                    lastResponse={lastAIResponse}
+                  />
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+
+        {/* Mobile Content Area */}
+        <div className="flex-1 flex flex-col min-h-0">
+          <div className="border-b bg-muted/20 flex items-center justify-center px-4 py-2">
+            <Tabs value={activeView} onValueChange={(value) => setActiveView(value as "tree" | "markmap")} className="w-full">
+              <TabsList className="w-full">
+                <TabsTrigger value="tree" className="flex-1">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Tree Editor
+                </TabsTrigger>
+                <TabsTrigger value="markmap" className="flex-1">
+                  <Map className="h-4 w-4 mr-2" />
+                  Markmap View
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+          
+          <Tabs value={activeView} onValueChange={(value) => setActiveView(value as "tree" | "markmap")} className="flex-1 min-h-0">
+            <TabsContent value="tree" className="h-full m-0 min-h-0">
+              <div className="h-full p-4 overflow-y-auto min-h-0">
+                <div className="space-y-4">
+                  <div className="flex flex-col gap-3">
+                    <h3 className="text-base font-medium">Interactive Tree Editor</h3>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        size="sm"
+                        onClick={() => addNode(null, 1)}
+                        className="flex items-center gap-2"
+                        aria-label="Add new root item to tree"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Add Root Item
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (markdownContent.trim()) {
+                            setShowOverwriteDialog(true)
+                          } else {
+                            setMarkdownContent(treeToMarkdown(treeData))
+                          }
+                        }}
+                        className="flex items-center gap-2"
+                        aria-label="Convert tree structure to markdown format"
+                      >
+                        <FileText className="h-4 w-4" />
+                        Convert Tree to Markdown
+                      </Button>
+                    </div>
+              </div>
+                  
+                  <div className="space-y-2">
+                    {treeData.map((node) => renderTreeNode(node))}
+                  </div>
+              </div>
+              </div>
+            </TabsContent>
+            <TabsContent value="markmap" className="h-full m-0 min-h-0">
+              <MarkmapViewer 
+                markdown={markdownContent}
+                className="w-full h-full"
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+
+      {/* Desktop Layout: Side-by-side (3 columns) */}
+      <div className="hidden lg:flex bg-background h-full w-full">
       {/* Left Sidebar - Markdown Editor */}
       <div className="w-80 border-r bg-muted/30 flex flex-col">
         <div className="p-4 border-b">
-          <div className="flex items-center gap-2 mb-2">
-            <FileText className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">Markdown Editor</h2>
-          </div>
+            <div className="flex items-center gap-2 mb-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-lg font-semibold">Markdown Editor</h2>
+            </div>
           <div className="space-y-2">
             <Label htmlFor="title">Map Title</Label>
             <Input
@@ -610,35 +561,35 @@ markmap:
               onChange={(e) => setMapTitle(e.target.value)}
               placeholder="Enter map title..."
               className="font-medium"
-              minLength={1}
-              required
-              aria-describedby="title-error"
-            />
-            {!mapTitle.trim() && (
-              <p id="title-error" className="text-xs text-destructive">
-                Map title is required
-              </p>
-            )}
+                minLength={1}
+                required
+                aria-describedby="title-error"
+              />
+              {!mapTitle.trim() && (
+                <p id="title-error" className="text-xs text-destructive">
+                  Map title is required
+                </p>
+              )}
+        </div>
           </div>
-        </div>
-        
-        <div className="flex-1 p-4 min-h-0">
-          <Textarea
-            value={markdownContent}
-            onChange={(e) => setMarkdownContent(e.target.value)}
-            placeholder="Enter your markdown content here..."
-            className="h-full resize-none font-mono text-sm overflow-y-auto"
-          />
-        </div>
+          
+          <div className="flex-1 p-4 min-h-0">
+            <Textarea
+              value={markdownContent}
+              onChange={(e) => setMarkdownContent(e.target.value)}
+              placeholder="Enter your markdown content here..."
+              className="h-full resize-none font-mono text-sm overflow-y-auto"
+            />
+          </div>
         
         <div className="p-4 border-t space-y-2">
-          <Button className="w-full" size="sm" disabled aria-label="Save mindmap (coming soon)">
+            <Button className="w-full" size="sm" disabled aria-label="Save mindmap (coming soon)">
             <Save className="h-4 w-4 mr-2" />
-            Save (Coming Soon)
+              Save (Coming Soon)
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="flex-1" asChild>
-              <label className="cursor-pointer" aria-label="Import markdown file">
+                <label className="cursor-pointer" aria-label="Import markdown file">
                 <Upload className="h-4 w-4 mr-2" />
                 Import
                 <input
@@ -646,20 +597,20 @@ markmap:
                   accept=".md,.markdown"
                   onChange={handleImport}
                   className="hidden"
-                  aria-describedby="import-description"
+                    aria-describedby="import-description"
                 />
               </label>
             </Button>
-            <p id="import-description" className="sr-only">
-              Import a markdown file to load existing mindmap content
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="flex-1" 
-              onClick={handleExport}
-              aria-label="Export mindmap as markdown file"
-            >
+              <p id="import-description" className="sr-only">
+                Import a markdown file to load existing mindmap content
+              </p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1" 
+                onClick={handleExport}
+                aria-label="Export mindmap as markdown file"
+              >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
@@ -668,19 +619,19 @@ markmap:
       </div>
 
       {/* Center Canvas - Tree View */}
-      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col min-h-0">
         <div className="h-12 border-b bg-muted/20 flex items-center justify-between px-4">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Map className="h-4 w-4 text-muted-foreground" />
-              <h2 className="text-lg font-semibold">Mindmap Workspace</h2>
-            </div>
-            <Separator orientation="vertical" className="h-4" />
+            <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+                <Map className="h-4 w-4 text-muted-foreground" />
+                <h2 className="text-lg font-semibold">Mindmap Workspace</h2>
+              </div>
+              <Separator orientation="vertical" className="h-4" />
             <Tabs value={activeView} onValueChange={(value) => setActiveView(value as "tree" | "markmap")} className="h-full">
               <TabsList className="h-full">
                 <TabsTrigger value="tree" className="h-full">
                   <FileText className="h-4 w-4 mr-2" />
-                  Tree Editor
+                    Tree Editor
                 </TabsTrigger>
                 <TabsTrigger value="markmap" className="h-full">
                   <Map className="h-4 w-4 mr-2" />
@@ -689,15 +640,8 @@ markmap:
               </TabsList>
             </Tabs>
           </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">
-              {activeView === "tree" ? "Interactive tree editing" : "Visual mindmap view"}
-            </span>
-          </div>
         </div>
         
-        <div className="flex-1 min-h-0">
           <Tabs value={activeView} onValueChange={(value) => setActiveView(value as "tree" | "markmap")} className="h-full m-0">
             <TabsContent value="tree" className="h-full m-0">
               <div className="h-full p-4 overflow-y-auto">
@@ -746,25 +690,25 @@ markmap:
               />
             </TabsContent>
           </Tabs>
-        </div>
       </div>
 
       {/* Right Sidebar - AI Assistant */}
       <div className="w-96 border-l bg-muted/30 flex flex-col">
-        <div className="px-4 pt-4 pb-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-muted-foreground" />
-            <h2 className="text-lg font-semibold">AI Assistant</h2>
+          <div className="px-4 pt-4 pb-2">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-lg font-semibold">AI Assistant</h2>
+            </div>
           </div>
-        </div>
-        
-        <div className="flex-1 px-4 pb-4 overflow-y-auto">
-          <AIAssistant
-            onAIResponse={handleAIResponse}
-            currentMarkdown={markdownContent}
-            lastResponse={lastAIResponse}
-          />
-        </div>
+          
+          <div className="flex-1 px-4 pb-4 overflow-y-auto">
+            <AIAssistant
+              onAIResponse={handleAIResponse}
+              currentMarkdown={markdownContent}
+              lastResponse={lastAIResponse}
+            />
+          </div>
+            </div>
       </div>
 
       {/* Overwrite Warning Dialog */}
