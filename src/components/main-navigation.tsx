@@ -32,7 +32,7 @@ export function MainNavigation() {
                   priority
                 />
               </div>
-              <span className="font-bold text-xl">Marky</span>
+              <span className="text-lg font-bold lg:text-xl">Marky</span>
             </Link>
           </div>
 
@@ -47,8 +47,7 @@ export function MainNavigation() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
+                  <Settings className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
