@@ -55,19 +55,13 @@ export function MarkmapViewer({ markdown, className }: MarkmapViewerProps) {
     const currentTheme = resolvedTheme || theme || 'light';
     const svg = refSvg.current;
     
-    // Apply theme-specific CSS variables
+    // Apply theme-specific styling directly to SVG
     if (currentTheme === 'dark') {
-      svg.style.setProperty('--markmap-node-fill', '#1f2937');
-      svg.style.setProperty('--markmap-node-stroke', '#4b5563');
-      svg.style.setProperty('--markmap-link-stroke', '#6b7280');
-      svg.style.setProperty('--markmap-text-fill', '#f9fafb');
-      svg.style.setProperty('--markmap-background', '#111827');
+      svg.style.backgroundColor = '#0f172a'; // slate-900 - matches website dark theme
+      svg.style.color = '#f8fafc'; // slate-50 - high contrast text
     } else {
-      svg.style.setProperty('--markmap-node-fill', '#ffffff');
-      svg.style.setProperty('--markmap-node-stroke', '#d1d5db');
-      svg.style.setProperty('--markmap-link-stroke', '#9ca3af');
-      svg.style.setProperty('--markmap-text-fill', '#111827');
-      svg.style.setProperty('--markmap-background', '#ffffff');
+      svg.style.backgroundColor = '#ffffff'; // white background
+      svg.style.color = '#0f172a'; // slate-900 - high contrast text
     }
     
     // Force re-render to apply theme changes
@@ -77,15 +71,8 @@ export function MarkmapViewer({ markdown, className }: MarkmapViewerProps) {
   return (
     <div className={`relative w-full h-full ${className}`}>
       <svg 
-        className="w-full h-full markmap-svg" 
+        className="w-full h-full" 
         ref={refSvg}
-        style={{
-          '--markmap-node-fill': 'var(--markmap-node-fill, #ffffff)',
-          '--markmap-node-stroke': 'var(--markmap-node-stroke, #d1d5db)',
-          '--markmap-link-stroke': 'var(--markmap-link-stroke, #9ca3af)',
-          '--markmap-text-fill': 'var(--markmap-text-fill, #111827)',
-          '--markmap-background': 'var(--markmap-background, #ffffff)',
-        } as React.CSSProperties}
       />
       <div className="absolute bottom-4 right-4" ref={refToolbar}></div>
     </div>
