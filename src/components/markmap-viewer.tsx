@@ -57,11 +57,11 @@ export function MarkmapViewer({ markdown, className }: MarkmapViewerProps) {
     
     // Apply theme-specific styling directly to SVG
     if (currentTheme === 'dark') {
-      svg.style.backgroundColor = '#0f172a'; // slate-900 - matches website dark theme
-      svg.style.color = '#f8fafc'; // slate-50 - high contrast text
+      svg.style.backgroundColor = 'oklch(0.145 0 0)'; // Exact same as website dark background
+      svg.style.color = 'oklch(0.985 0 0)'; // Exact same as website dark foreground
     } else {
-      svg.style.backgroundColor = '#ffffff'; // white background
-      svg.style.color = '#0f172a'; // slate-900 - high contrast text
+      svg.style.backgroundColor = 'oklch(1 0 0)'; // Exact same as website light background
+      svg.style.color = 'oklch(0.145 0 0)'; // Exact same as website light foreground
     }
     
     // Force re-render to apply theme changes
