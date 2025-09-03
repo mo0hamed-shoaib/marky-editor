@@ -30,8 +30,8 @@ import { AIAssistant } from "@/components/ai-assistant"
 import { AIResponse } from "@/lib/ai-service"
 import { MarkmapViewer } from "@/components/markmap-viewer"
 
-export default function MarkflowPage() {
-  const [markdownContent, setMarkdownContent] = useState(`# Markflow
+export default function MarkyPage() {
+  const [markdownContent, setMarkdownContent] = useState(`# Marky
 ## Getting Started
 ### Create your first mindmap
 - Drag and drop nodes

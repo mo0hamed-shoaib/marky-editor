@@ -6,7 +6,7 @@ export function Footer() {
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="text-sm text-muted-foreground">
-            © 2025 Loom Starter by Mohamed Gamal
+            © 2025 Marky by Mohamed Gamal
           </div>
           <div className="flex items-center gap-4">
             <a

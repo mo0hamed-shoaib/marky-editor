@@ -17,31 +17,17 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Loom Starter",
-  description: "Professional starter template with Web Interface Guidelines",
+  title: "Marky - Mindmap Application",
+  description: "AI-powered mindmap creation and editing application",
   icons: {
-    icon: [
-      { 
-        url: "/favicon-dark.svg", 
-        type: "image/svg+xml", 
-        media: "(prefers-color-scheme: light)" 
-      },
-      { 
-        url: "/favicon-light.svg", 
-        type: "image/svg+xml", 
-        media: "(prefers-color-scheme: dark)" 
-      },
-    ],
-    shortcut: "/favicon-dark.svg",
-    apple: "/favicon-dark.svg",
+    icon: "/marky-logo.png",
+    shortcut: "/marky-logo.png",
+    apple: "/marky-logo.png",
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
-  ],
+  themeColor: "#000000",
 }
 
 export default function RootLayout({

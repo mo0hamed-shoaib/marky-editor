@@ -21,29 +21,18 @@ export function MainNavigation() {
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-4">
-            {/* Auto-switching Logo */}
+            {/* Marky Logo */}
             <Link href="/" className="flex items-center gap-3">
               <div className="relative">
-                {/* Light-on-dark logo for dark mode */}
                 <Image
-                  src="/loom-light.svg"
-                  alt="Markflow logo"
+                  src="/marky-logo.png"
+                  alt="Marky logo"
                   width={32}
                   height={32}
-                  className="hidden dark:block"
-                  priority
-                />
-                {/* Dark-on-light logo for light mode */}
-                <Image
-                  src="/loom-dark.svg"
-                  alt="Markflow logo"
-                  width={32}
-                  height={32}
-                  className="block dark:hidden"
                   priority
                 />
               </div>
-              <span className="font-bold text-xl">Markflow</span>
+              <span className="font-bold text-xl">Marky</span>
             </Link>
           </div>
 

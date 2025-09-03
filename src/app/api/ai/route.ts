@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
         'HTTP-Referer': request.headers.get('origin') || 'http://localhost:3000',
-        'X-Title': 'Markflow - AI Mindmap Assistant'
+        'X-Title': 'Marky - AI Mindmap Assistant'
       },
       body: JSON.stringify({
         model: 'google/gemini-2.0-flash-exp:free',
