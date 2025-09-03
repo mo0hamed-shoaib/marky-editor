@@ -3,8 +3,7 @@ import { Inter, JetBrains_Mono } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner"
-import { MainNavigation } from "@/components/main-navigation"
-import { Footer } from "@/components/footer"
+import { LayoutWrapper } from "@/components/layout-wrapper"
 
 const inter = Inter({
   variable: "--font-inter",
@@ -45,13 +44,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <div className="h-screen flex flex-col">
-            <MainNavigation />
-            <main className="flex-1 overflow-hidden">
-              {children}
-            </main>
-            <Footer />
-          </div>
+                  <div className="h-screen flex flex-col">
+          <LayoutWrapper>
+            {children}
+          </LayoutWrapper>
+        </div>
           <Toaster />
         </ThemeProvider>
       </body>
