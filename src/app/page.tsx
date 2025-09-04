@@ -481,7 +481,7 @@ markmap:
       console.log('Exporting tree data:', treeData);
       console.log('Markdown content:', markdownContent);
       
-      // Create interactive HTML with embedded Markmap and static fallback
+      // Create complete interactive HTML with full markmap functionality
       const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -497,9 +497,10 @@ markmap:
             background: #ffffff;
         }
         
-        #interactive-container {
+        #markmap {
             width: 100%;
-            height: 100%;
+            height: 100vh;
+            border: none;
         }
         
         #static-fallback {
@@ -557,7 +558,7 @@ markmap:
 </head>
 <body>
     <div id="loading" class="loading">Loading Interactive Mindmap...</div>
-    <div id="interactive-container" style="display: none;"></div>
+    <svg id="markmap" style="display: none;"></svg>
     <div id="static-fallback" style="display: none;">
         <div class="fallback-notice">
             <strong>📱 Static View Mode</strong><br>
@@ -566,45 +567,102 @@ markmap:
         ${generateStaticHTML(treeData)}
     </div>
     
-    <script type="module">
-        // Try to load interactive markmap first
-        try {
-            const { markmap } = await import('https://unpkg.com/markmap-view@0.15.4/dist/index.esm.js');
-            
-            // Transform tree data to markmap format
-            const treeData = ${JSON.stringify(treeData)};
-            
-            const transformToMarkmap = (nodes) => {
-                if (!Array.isArray(nodes)) return [];
-                return nodes.map(node => ({
-                    id: node.id || Math.random().toString(),
-                    t: node.text || 'Untitled',
-                    d: node.level || 1,
-                    children: node.children && node.children.length > 0 ? transformToMarkmap(node.children) : []
-                }));
-            };
-            
-            const transformedData = transformToMarkmap(treeData);
-            
-            if (transformedData && transformedData.length > 0) {
-                // Hide loading, show interactive markmap
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('interactive-container').style.display = 'block';
+    <!-- Load all dependencies as scripts for maximum compatibility -->
+    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.16.3/dist/browser/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4/dist/browser/index.min.js"></script>
+    
+    <script>
+        (async () => {
+            try {
+                // Access the global objects
+                const { markmap } = window;
+                const { Markmap, loadCSS, loadJS } = markmap;
+                const { transform } = window.markmap;
                 
-                // Create and render markmap
-                markmap(document.getElementById('interactive-container'), transformedData);
+                // Transform tree data to markdown first, then to markmap format
+                const treeData = ${JSON.stringify(treeData)};
+                
+                // Convert tree to markdown format
+                const treeToMarkdown = (nodes) => {
+                    if (!Array.isArray(nodes) || nodes.length === 0) return '';
+                    
+                    let markdown = '';
+                    nodes.forEach(node => {
+                        const level = node.level || 1;
+                        const prefix = '#'.repeat(level);
+                        markdown += \`\${prefix} \${node.text}\\n\`;
+                        
+                        if (node.children && node.children.length > 0) {
+                            node.children.forEach(child => {
+                                const childLevel = child.level || level + 1;
+                                const childPrefix = '#'.repeat(childLevel);
+                                markdown += \`\${childPrefix} \${child.text}\\n\`;
+                                
+                                if (child.children && child.children.length > 0) {
+                                    child.children.forEach(grandChild => {
+                                        const grandChildLevel = grandChild.level || childLevel + 1;
+                                        const grandChildPrefix = '#'.repeat(grandChildLevel);
+                                        markdown += \`\${grandChildPrefix} \${grandChild.text}\\n\`;
+                                        
+                                        if (grandChild.children && grandChild.children.length > 0) {
+                                            grandChild.children.forEach(item => {
+                                                markdown += \`- \${item.text}\\n\`;
+                                            });
+                                        }
+                                    });
+                                }
+                            });
+                        }
+                    });
+                    return markdown;
+                };
+                
+                const markdown = treeToMarkdown(treeData);
+                console.log('Generated markdown:', markdown);
+                
+                // Transform markdown to markmap data
+                const { root, features } = transform(markdown);
+                console.log('Transformed data:', root);
+                
+                // Load required CSS and JS assets
+                const { styles, scripts } = markmap.getAssets();
+                if (styles) loadCSS(styles);
+                if (scripts) {
+                    loadJS(scripts, {
+                        getMarkmap: () => markmap,
+                    });
+                }
+                
+                // Hide loading, show markmap
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('markmap').style.display = 'block';
+                
+                // Create the markmap with full functionality
+                Markmap.create('#markmap', {
+                    // Custom styling options
+                    color: (d) => {
+                        const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
+                        return colors[d.depth % colors.length];
+                    },
+                    duration: 500,
+                    maxWidth: 300,
+                    initialExpandLevel: 2,
+                    zoom: true,
+                    pan: true
+                }, root);
+                
                 console.log('Interactive markmap loaded successfully!');
-            } else {
-                throw new Error('No data to display');
+                
+            } catch (error) {
+                console.warn('Interactive version failed, showing static version:', error);
+                
+                // Hide loading and markmap, show static fallback
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('markmap').style.display = 'none';
+                document.getElementById('static-fallback').style.display = 'block';
             }
-        } catch (error) {
-            console.warn('Interactive version failed, showing static version:', error);
-            
-            // Hide loading and interactive container, show static fallback
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('interactive-container').style.display = 'none';
-            document.getElementById('static-fallback').style.display = 'block';
-        }
+        })();
     </script>
 </body>
 </html>`
