@@ -3,17 +3,9 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Plus, Settings } from "lucide-react"
+import { Plus } from "lucide-react"
 import Image from "next/image"
-import { Separator } from "@/components/ui/separator"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 
 export function MainNavigation() {
   return (
@@ -43,25 +35,6 @@ export function MainNavigation() {
                 New Mindmap
               </Link>
             </Button>
-            <Separator orientation="vertical" className="h-4" />
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Settings className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>Visual Theme</DropdownMenuLabel>
-                <DropdownMenuItem>Light Theme</DropdownMenuItem>
-                <DropdownMenuItem>Dark Theme</DropdownMenuItem>
-                <DropdownMenuItem>Minimal Theme</DropdownMenuItem>
-                <DropdownMenuItem>Colorful Theme</DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuLabel>Layout Options</DropdownMenuLabel>
-                <DropdownMenuItem>Radial Layout</DropdownMenuItem>
-                <DropdownMenuItem>Hierarchical Layout</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             <ThemeToggle />
           </div>
         </div>

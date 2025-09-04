@@ -21,7 +21,6 @@ import {
   FileText, 
   Map, 
   Sparkles, 
-  Save, 
   Download,
   Upload,
   Plus,
@@ -435,34 +434,84 @@ markmap:
     event.target.value = ""
   }
 
-  // Handle file export
+  // Handle file export as interactive HTML
   const handleExport = () => {
     try {
       if (!markdownContent.trim()) {
         toast.error("No Content", {
-        description: "Please add some content before exporting",
-        duration: 3000,
-      })
+          description: "Please add some content before exporting",
+          duration: 3000,
+        })
         return
       }
       
-      const content = markdownContent
-      const blob = new Blob([content], { type: 'text/markdown' })
+      // Create interactive HTML with embedded Markmap
+      const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${mapTitle || 'Mindmap'}</title>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        #markmap {
+            width: 100%;
+            height: 100%;
+        }
+        .markmap-container {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="markmap" class="markmap-container"></div>
+    <script>
+        const { Markmap } = window.markmap;
+        const mm = Markmap.create('#markmap');
+        
+        // Markmap data
+        const markmapData = ${JSON.stringify(treeData)};
+        
+        // Transform tree data to markmap format
+        const transformToMarkmap = (nodes) => {
+            return nodes.map(node => ({
+                id: node.id,
+                t: node.text,
+                d: node.level,
+                children: node.children ? transformToMarkmap(node.children) : []
+            }));
+        };
+        
+        const transformedData = transformToMarkmap(markmapData);
+        mm.setData(transformedData);
+        mm.fit();
+    </script>
+</body>
+</html>`
+      
+      const blob = new Blob([htmlContent], { type: 'text/html' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `${mapTitle || 'mindmap'}.md`
+      a.download = `${mapTitle || 'mindmap'}.html`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
       
-      toast.success("File Exported!", {
-        description: `Successfully exported "${mapTitle || 'mindmap'}.md"`,
+      toast.success("HTML Exported!", {
+        description: `Successfully exported "${mapTitle || 'mindmap'}.html"`,
         duration: 6000,
       })
     } catch (error) {
-      toast.error("Failed to export file. Please try again.")
+      toast.error("Failed to export HTML file. Please try again.")
       console.error("Export error:", error)
     }
   }
@@ -536,10 +585,6 @@ markmap:
                   </div>
                   
                   <div className="space-y-2">
-                    <Button className="w-full" size="sm" disabled aria-label="Save mindmap (coming soon)">
-                      <Save className="h-4 w-4 mr-2" />
-                      Save (Coming Soon)
-                    </Button>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="flex-1" asChild>
                         <label className="cursor-pointer" aria-label="Import markdown file">
@@ -565,7 +610,7 @@ markmap:
                         aria-label="Export mindmap as markdown file"
                       >
                         <Download className="h-4 w-4 mr-2" />
-                        Export
+                        Export as HTML
                       </Button>
                     </div>
                   </div>
@@ -730,10 +775,6 @@ markmap:
             </div>
         
         <div className="p-4 border-t space-y-2">
-            <Button className="w-full" size="sm" disabled aria-label="Save mindmap (coming soon)">
-            <Save className="h-4 w-4 mr-2" />
-              Save (Coming Soon)
-          </Button>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" className="flex-1" asChild>
                 <label className="cursor-pointer" aria-label="Import markdown file">
