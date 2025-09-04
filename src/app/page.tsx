@@ -596,13 +596,19 @@ markmap:
             
             // Check if libraries are available
             if (typeof window.markmap === 'undefined') {
-                console.error('markmap-view not loaded');
+                console.error('markmap library not loaded');
                 showFallback();
                 return;
             }
             
-            if (typeof window.markmap.transform === 'undefined') {
-                console.error('markmap-lib not loaded');
+            if (!window.markmap.Transformer) {
+                console.error('markmap-lib (Transformer) not loaded');
+                showFallback();
+                return;
+            }
+            
+            if (!window.markmap.Markmap) {
+                console.error('markmap-view (Markmap) not loaded');
                 showFallback();
                 return;
             }
@@ -613,9 +619,13 @@ markmap:
         
         function showFallback() {
             console.log('Showing static fallback');
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('markmap').style.display = 'none';
-            document.getElementById('static-fallback').style.display = 'block';
+            const loading = document.getElementById('loading');
+            const markmap = document.getElementById('mm-svg');
+            const fallback = document.getElementById('static-fallback');
+            
+            if (loading) loading.style.display = 'none';
+            if (markmap) markmap.style.display = 'none';
+            if (fallback) fallback.style.display = 'block';
         }
         
         function initializeMarkmap() {
