@@ -445,6 +445,10 @@ markmap:
         return
       }
       
+      // Debug: Log the tree data
+      console.log('Exporting tree data:', treeData);
+      console.log('Markdown content:', markdownContent);
+      
       // Create interactive HTML with embedded Markmap
       const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -459,6 +463,7 @@ markmap:
             padding: 0;
             height: 100vh;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #ffffff;
         }
         #markmap {
             width: 100%;
@@ -468,30 +473,67 @@ markmap:
             width: 100%;
             height: 100%;
         }
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-size: 18px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
-    <div id="markmap" class="markmap-container"></div>
+    <div id="loading" class="loading">Loading Mindmap...</div>
+    <div id="markmap" class="markmap-container" style="display: none;"></div>
+    
     <script>
-        const { Markmap } = window.markmap;
-        const mm = Markmap.create('#markmap');
+        // Wait for markmap library to load
+        function initMarkmap() {
+            if (typeof window.markmap === 'undefined') {
+                setTimeout(initMarkmap, 100);
+                return;
+            }
+            
+            try {
+                const { Markmap } = window.markmap;
+                const mm = Markmap.create('#markmap');
+                
+                // Markmap data from tree structure
+                const treeData = ${JSON.stringify(treeData)};
+                
+                // Transform tree data to markmap format
+                const transformToMarkmap = (nodes) => {
+                    if (!Array.isArray(nodes)) return [];
+                    return nodes.map(node => ({
+                        id: node.id || Math.random().toString(),
+                        t: node.text || 'Untitled',
+                        d: node.level || 1,
+                        children: node.children && node.children.length > 0 ? transformToMarkmap(node.children) : []
+                    }));
+                };
+                
+                const transformedData = transformToMarkmap(treeData);
+                console.log('Transformed data:', transformedData);
+                
+                if (transformedData && transformedData.length > 0) {
+                    mm.setData(transformedData);
+                    mm.fit();
+                    
+                    // Hide loading, show markmap
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('markmap').style.display = 'block';
+                } else {
+                    document.getElementById('loading').innerHTML = 'No data to display';
+                }
+            } catch (error) {
+                console.error('Error initializing markmap:', error);
+                document.getElementById('loading').innerHTML = 'Error loading mindmap: ' + error.message;
+            }
+        }
         
-        // Markmap data
-        const markmapData = ${JSON.stringify(treeData)};
-        
-        // Transform tree data to markmap format
-        const transformToMarkmap = (nodes) => {
-            return nodes.map(node => ({
-                id: node.id,
-                t: node.text,
-                d: node.level,
-                children: node.children ? transformToMarkmap(node.children) : []
-            }));
-        };
-        
-        const transformedData = transformToMarkmap(markmapData);
-        mm.setData(transformedData);
-        mm.fit();
+        // Start initialization
+        initMarkmap();
     </script>
 </body>
 </html>`
