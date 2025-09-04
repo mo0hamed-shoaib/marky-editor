@@ -434,6 +434,38 @@ markmap:
     event.target.value = ""
   }
 
+  // Generate static HTML representation of the mindmap
+  const generateStaticHTML = (nodes: TreeNode[]): string => {
+    if (!Array.isArray(nodes) || nodes.length === 0) {
+      return '<div style="text-align: center; color: #666; padding: 40px;">No mindmap data to display</div>';
+    }
+    
+    const renderNode = (node: TreeNode, depth: number = 0): string => {
+      const indent = depth * 30;
+      const isRoot = depth === 0;
+      
+      let html = '';
+      
+      if (isRoot) {
+        html += `<div class="mindmap-node" style="margin-left: ${indent}px;">${node.text}</div>`;
+      } else {
+        html += `<div class="mindmap-child" style="margin-left: ${indent}px;">${node.text}</div>`;
+      }
+      
+      if (node.children && node.children.length > 0) {
+        html += `<div class="mindmap-children">`;
+        node.children.forEach(child => {
+          html += renderNode(child, depth + 1);
+        });
+        html += `</div>`;
+      }
+      
+      return html;
+    };
+    
+    return nodes.map(node => renderNode(node)).join('');
+  };
+
   // Handle file export as interactive HTML
   const handleExport = () => {
     try {
@@ -449,14 +481,13 @@ markmap:
       console.log('Exporting tree data:', treeData);
       console.log('Markdown content:', markdownContent);
       
-      // Create interactive HTML with embedded Markmap
+      // Create interactive HTML with embedded Markmap and static fallback
       const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${mapTitle || 'Mindmap'}</title>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/index.min.js" type="module"></script>
     <style>
         body {
             margin: 0;
@@ -465,10 +496,45 @@ markmap:
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #ffffff;
         }
-        #mindmap-container {
+        
+        #interactive-container {
             width: 100%;
             height: 100%;
         }
+        
+        #static-fallback {
+            display: none;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .mindmap-node {
+            margin: 10px 0;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 8px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .mindmap-children {
+            margin-left: 30px;
+            border-left: 3px solid #e2e8f0;
+            padding-left: 20px;
+        }
+        
+        .mindmap-child {
+            background: #f8f9fa;
+            color: #333;
+            margin: 8px 0;
+            padding: 10px 14px;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+        
         .loading {
             display: flex;
             justify-content: center;
@@ -477,72 +543,68 @@ markmap:
             font-size: 18px;
             color: #666;
         }
-        .error {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-size: 18px;
-            color: #dc2626;
+        
+        .fallback-notice {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
             text-align: center;
-            padding: 20px;
         }
     </style>
 </head>
 <body>
-    <div id="loading" class="loading">Loading Mindmap...</div>
-    <div id="mindmap-container" style="display: none;"></div>
-    <div id="error" class="error" style="display: none;"></div>
+    <div id="loading" class="loading">Loading Interactive Mindmap...</div>
+    <div id="interactive-container" style="display: none;"></div>
+    <div id="static-fallback" style="display: none;">
+        <div class="fallback-notice">
+            <strong>📱 Static View Mode</strong><br>
+            Interactive features unavailable, but your mindmap is fully visible below.
+        </div>
+        ${generateStaticHTML(treeData)}
+    </div>
     
     <script type="module">
-        // Import markmap library
-        import { Markmap } from 'https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/index.min.js';
-        
-        // Wait for DOM to be ready
-        document.addEventListener('DOMContentLoaded', function() {
-            try {
-                console.log('Creating markmap instance...');
-                
-                // Create markmap instance
-                const mm = Markmap.create('#mindmap-container');
-                
-                // Markmap data from tree structure
-                const treeData = ${JSON.stringify(treeData)};
-                console.log('Tree data:', treeData);
-                
-                // Transform tree data to markmap format
-                const transformToMarkmap = (nodes) => {
-                    if (!Array.isArray(nodes)) return [];
-                    return nodes.map(node => ({
-                        id: node.id || Math.random().toString(),
-                        t: node.text || 'Untitled',
-                        d: node.level || 1,
-                        children: node.children && node.children.length > 0 ? transformToMarkmap(node.children) : []
-                    }));
-                };
-                
-                const transformedData = transformToMarkmap(treeData);
-                console.log('Transformed data:', transformedData);
-                
-                if (transformedData && transformedData.length > 0) {
-                    mm.setData(transformedData);
-                    mm.fit();
-                    
-                    // Hide loading, show markmap
-                    document.getElementById('loading').style.display = 'none';
-                    document.getElementById('mindmap-container').style.display = 'block';
-                    console.log('Markmap loaded successfully!');
-                } else {
-                    document.getElementById('loading').innerHTML = 'No data to display';
-                    console.log('No data to display');
-                }
-            } catch (error) {
-                console.error('Error initializing markmap:', error);
+        // Try to load interactive markmap first
+        try {
+            const { markmap } = await import('https://unpkg.com/markmap-view@0.15.4/dist/index.esm.js');
+            
+            // Transform tree data to markmap format
+            const treeData = ${JSON.stringify(treeData)};
+            
+            const transformToMarkmap = (nodes) => {
+                if (!Array.isArray(nodes)) return [];
+                return nodes.map(node => ({
+                    id: node.id || Math.random().toString(),
+                    t: node.text || 'Untitled',
+                    d: node.level || 1,
+                    children: node.children && node.children.length > 0 ? transformToMarkmap(node.children) : []
+                }));
+            };
+            
+            const transformedData = transformToMarkmap(treeData);
+            
+            if (transformedData && transformedData.length > 0) {
+                // Hide loading, show interactive markmap
                 document.getElementById('loading').style.display = 'none';
-                document.getElementById('error').style.display = 'block';
-                document.getElementById('error').innerHTML = 'Error loading mindmap: ' + error.message;
+                document.getElementById('interactive-container').style.display = 'block';
+                
+                // Create and render markmap
+                markmap(document.getElementById('interactive-container'), transformedData);
+                console.log('Interactive markmap loaded successfully!');
+            } else {
+                throw new Error('No data to display');
             }
-        });
+        } catch (error) {
+            console.warn('Interactive version failed, showing static version:', error);
+            
+            // Hide loading and interactive container, show static fallback
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('interactive-container').style.display = 'none';
+            document.getElementById('static-fallback').style.display = 'block';
+        }
     </script>
 </body>
 </html>`
