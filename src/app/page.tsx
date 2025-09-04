@@ -558,7 +558,7 @@ markmap:
 </head>
 <body>
     <div id="loading" class="loading">Loading Interactive Mindmap...</div>
-    <svg id="markmap" style="display: none;"></svg>
+    <svg id="mm-svg" style="display: none;"></svg>
     <div id="static-fallback" style="display: none;">
         <div class="fallback-notice">
             <strong>📱 Static View Mode</strong><br>
@@ -569,27 +569,24 @@ markmap:
     
     <!-- Load all dependencies as scripts for maximum compatibility -->
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.16.3/dist/browser/index.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4/dist/browser/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.18.12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12"></script>
     
     <!-- Debug script to check library loading -->
     <script>
         console.log('=== LIBRARY LOADING DEBUG ===');
         console.log('D3 loaded:', typeof d3 !== 'undefined');
         
-        // Check what's actually available globally
-        console.log('Available global objects:');
-        console.log('- window.markmap:', window.markmap);
-        console.log('- window.markmapLib:', window.markmapLib);
-        console.log('- window.markmapView:', window.markmapView);
-        console.log('- window.markmapView:', window.markmapView);
+        // Check the correct namespace (window.markmap)
+        console.log('Markmap namespace:', window.markmap);
         
-        // Check all global objects that might contain markmap
-        Object.keys(window).forEach(key => {
-            if (key.toLowerCase().includes('markmap')) {
-                console.log('Found markmap-related global:', key, window[key]);
-            }
-        });
+        if (window.markmap) {
+            console.log('Markmap methods:', Object.keys(window.markmap));
+            console.log('Has Transformer:', !!window.markmap.Transformer);
+            console.log('Has Markmap:', !!window.markmap.Markmap);
+            console.log('Has loadCSS:', !!window.markmap.loadCSS);
+            console.log('Has loadJS:', !!window.markmap.loadJS);
+        }
     </script>
     
     <script>
@@ -628,21 +625,27 @@ markmap:
                 // Based on markmap.js.org implementation, use the correct approach
                 // The libraries should expose themselves as global objects
                 
-                // Check if we have the markmap global object
-                if (!window.markmap) {
+                // Grab the single namespace as described by the expert
+                const mm = window.markmap;
+                if (!mm) {
                     throw new Error('markmap library not loaded');
                 }
                 
-                console.log('Markmap library found:', window.markmap);
-                console.log('Available methods:', Object.keys(window.markmap));
+                console.log('Markmap namespace found:', mm);
+                console.log('Available methods:', Object.keys(mm));
                 
-                // Get the transform function from markmap-lib
-                const transform = window.markmap.transform;
-                if (!transform || typeof transform !== 'function') {
-                    throw new Error('transform function not found');
+                // Get the required classes and functions
+                const { Transformer } = mm;
+                const { Markmap, loadCSS, loadJS } = mm;
+                
+                if (!Transformer) {
+                    throw new Error('Transformer class not found');
+                }
+                if (!Markmap) {
+                    throw new Error('Markmap class not found');
                 }
                 
-                console.log('Transform function found:', transform);
+                console.log('Required classes found:', { Transformer, Markmap, loadCSS, loadJS });
                 
                 // Transform tree data to markdown first, then to markmap format
                 const treeData = ${JSON.stringify(treeData)};
@@ -686,19 +689,18 @@ markmap:
                 const markdown = treeToMarkdown(treeData);
                 console.log('Generated markdown:', markdown);
                 
-                // Transform markdown to markmap data using the correct transform function
-                const { root, features } = transform(markdown);
+                // Transform markdown to markmap data using Transformer class
+                const transformer = new Transformer();
+                const { root, features } = transformer.transform(markdown);
                 console.log('Transformed data:', root);
                 
                 // Load required CSS and JS assets
-                const { styles, scripts } = window.markmap.getAssets();
+                const { styles, scripts } = transformer.getUsedAssets(features);
                 console.log('Assets:', { styles, scripts });
                 
-                if (styles) window.markmap.loadCSS(styles);
+                if (styles) mm.loadCSS(styles);
                 if (scripts) {
-                    window.markmap.loadJS(scripts, {
-                        getMarkmap: () => window.markmap,
-                    });
+                    mm.loadJS(scripts, { getMarkmap: () => mm });
                 }
                 
                 // Hide loading, show markmap
@@ -706,7 +708,7 @@ markmap:
                 document.getElementById('markmap').style.display = 'block';
                 
                 // Create the markmap with full functionality
-                window.markmap.Markmap.create('#markmap', {
+                Markmap.create('#mm-svg', {
                     // Custom styling options
                     color: (d) => {
                         const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
