@@ -618,16 +618,46 @@ markmap:
             try {
                 console.log('Initializing markmap...');
                 
-                // Access the global objects correctly
-                const { markmap } = window;
-                const { Markmap, loadCSS, loadJS } = markmap;
+                // Debug: Check what's actually available globally
+                console.log('Global objects available:');
+                console.log('- window.markmap:', window.markmap);
+                console.log('- window.markmapView:', window.markmapView);
+                console.log('- window.markmapLib:', window.markmapLib);
+                console.log('- window.markmap:', typeof window.markmap);
                 
-                // The transform function is in window.markmap, not window.markmap.transform
-                const transform = window.markmap.transform;
+                // Try different ways to access the libraries
+                let markmapView, markmapLib, transform;
                 
-                console.log('Markmap objects:', { markmap, Markmap, loadCSS, loadJS });
-                console.log('Transform function:', transform);
-                console.log('Available markmap methods:', Object.keys(window.markmap));
+                if (window.markmapView) {
+                    markmapView = window.markmapView;
+                    console.log('Found markmapView:', markmapView);
+                } else if (window.markmap && window.markmap.Markmap) {
+                    markmapView = window.markmap;
+                    console.log('Found markmap with Markmap:', markmapView);
+                } else {
+                    throw new Error('markmap-view library not found');
+                }
+                
+                if (window.markmapLib) {
+                    markmapLib = window.markmapLib;
+                    console.log('Found markmapLib:', markmapLib);
+                } else if (window.markmap && window.markmap.transform) {
+                    markmapLib = window.markmap;
+                    console.log('Found markmap with transform:', markmapLib);
+                } else {
+                    throw new Error('markmap-lib library not found');
+                }
+                
+                // Get the transform function
+                if (markmapLib.transform) {
+                    transform = markmapLib.transform;
+                } else if (markmapLib.markmap && markmapLib.markmap.transform) {
+                    transform = markmapLib.markmap.transform;
+                } else {
+                    throw new Error('transform function not found in markmap-lib');
+                }
+                
+                console.log('Transform function found:', transform);
                 
                 // Transform tree data to markdown first, then to markmap format
                 const treeData = ${JSON.stringify(treeData)};
@@ -676,13 +706,13 @@ markmap:
                 console.log('Transformed data:', root);
                 
                 // Load required CSS and JS assets
-                const { styles, scripts } = markmap.getAssets();
+                const { styles, scripts } = markmapView.getAssets();
                 console.log('Assets:', { styles, scripts });
                 
-                if (styles) loadCSS(styles);
+                if (styles) markmapView.loadCSS(styles);
                 if (scripts) {
-                    loadJS(scripts, {
-                        getMarkmap: () => markmap,
+                    markmapView.loadJS(scripts, {
+                        getMarkmap: () => markmapView,
                     });
                 }
                 
@@ -691,7 +721,7 @@ markmap:
                 document.getElementById('markmap').style.display = 'block';
                 
                 // Create the markmap with full functionality
-                Markmap.create('#markmap', {
+                markmapView.Markmap.create('#markmap', {
                     // Custom styling options
                     color: (d) => {
                         const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
