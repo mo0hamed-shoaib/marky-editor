@@ -714,8 +714,11 @@ markmap:
                 }
                 
                 // Hide loading, show markmap
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('markmap').style.display = 'block';
+                const loading = document.getElementById('loading');
+                const markmap = document.getElementById('mm-svg');
+                
+                if (loading) loading.style.display = 'none';
+                if (markmap) markmap.style.display = 'block';
                 
                 // Create the markmap with full functionality
                 Markmap.create('#mm-svg', {
