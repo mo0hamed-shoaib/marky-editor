@@ -504,43 +504,10 @@ markmap:
             background: #ffffff;
         }
         
-        /* Markmap styling to match our website */
+        /* Markmap styling - let markmap handle its own styling */
         #mm-svg {
-            width: 100% !important;
-            height: 100% !important;
-        }
-        
-        /* Target the actual markmap SVG elements */
-        #mm-svg .node {
-            cursor: pointer;
-        }
-        
-        #mm-svg .node circle {
-            fill: #667eea !important;
-            stroke: #667eea !important;
-            stroke-width: 2px !important;
-        }
-        
-        #mm-svg .node text {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-            font-size: 14px !important;
-            fill: #333 !important;
-        }
-        
-        #mm-svg .link {
-            fill: none !important;
-            stroke: #667eea !important;
-            stroke-width: 2px !important;
-        }
-        
-        /* Additional markmap styling */
-        #mm-svg .markmap-node {
-            fill: #667eea !important;
-        }
-        
-        #mm-svg .markmap-link {
-            stroke: #667eea !important;
-            stroke-width: 2px !important;
+            width: 100%;
+            height: 100%;
         }
         
         #static-fallback {
@@ -608,9 +575,8 @@ markmap:
     </div>
     
     <!-- Load all dependencies as scripts for maximum compatibility -->
-    <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.18.12"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12"></script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js"></script>
     
     <!-- Debug script to check library loading -->
     <script>
@@ -622,8 +588,8 @@ markmap:
         
         if (window.markmap) {
             console.log('Markmap methods:', Object.keys(window.markmap));
-            console.log('Has Transformer:', !!window.markmap.Transformer);
             console.log('Has Markmap:', !!window.markmap.Markmap);
+            console.log('Has deriveOptions:', !!window.markmap.deriveOptions);
             console.log('Has loadCSS:', !!window.markmap.loadCSS);
             console.log('Has loadJS:', !!window.markmap.loadJS);
         }
@@ -634,21 +600,21 @@ markmap:
         window.addEventListener('load', function() {
             console.log('Page loaded, checking libraries...');
             
-            // Check if libraries are available
+            // Check if libraries are available (official approach)
             if (typeof window.markmap === 'undefined') {
                 console.error('markmap library not loaded');
                 showFallback();
                 return;
             }
             
-            if (!window.markmap.Transformer) {
-                console.error('markmap-lib (Transformer) not loaded');
+            if (!window.markmap.Markmap) {
+                console.error('markmap-view (Markmap) not loaded');
                 showFallback();
                 return;
             }
             
-            if (!window.markmap.Markmap) {
-                console.error('markmap-view (Markmap) not loaded');
+            if (!window.markmap.deriveOptions) {
+                console.error('markmap deriveOptions not loaded');
                 showFallback();
                 return;
             }
@@ -685,73 +651,48 @@ markmap:
                 console.log('Available methods:', Object.keys(mm));
                 
                 // Get the required classes and functions
-                const { Transformer } = mm;
-                const { Markmap, loadCSS, loadJS } = mm;
+                const { Markmap, deriveOptions } = mm;
                 
-                if (!Transformer) {
-                    throw new Error('Transformer class not found');
-                }
                 if (!Markmap) {
                     throw new Error('Markmap class not found');
                 }
+                if (!deriveOptions) {
+                    throw new Error('deriveOptions function not found');
+                }
                 
-                console.log('Required classes found:', { Transformer, Markmap, loadCSS, loadJS });
+                console.log('Required classes found:', { Markmap, deriveOptions });
                 
                 // Transform tree data to markdown first, then to markmap format
                 const treeData = ${JSON.stringify(treeData)};
                 console.log('Tree data:', treeData);
                 
-                // Convert tree to markdown format
-                const treeToMarkdown = (nodes) => {
-                    if (!Array.isArray(nodes) || nodes.length === 0) return '';
+                // Convert tree data to markmap format (like official site)
+                const treeToMarkmapData = (nodes) => {
+                    if (!Array.isArray(nodes) || nodes.length === 0) return { content: 'Empty', children: [] };
                     
-                    let markdown = '';
-                    nodes.forEach(node => {
-                        const level = node.level || 1;
-                        const prefix = '#'.repeat(level);
-                        markdown += \`\${prefix} \${node.text}\\n\`;
-                        
-                        if (node.children && node.children.length > 0) {
-                            node.children.forEach(child => {
-                                const childLevel = child.level || level + 1;
-                                const childPrefix = '#'.repeat(childLevel);
-                                markdown += \`\${childPrefix} \${child.text}\\n\`;
-                                
-                                if (child.children && child.children.length > 0) {
-                                    child.children.forEach(grandChild => {
-                                        const grandChildLevel = grandChild.level || childLevel + 1;
-                                        const grandChildPrefix = '#'.repeat(grandChildLevel);
-                                        markdown += \`\${grandChildPrefix} \${grandChild.text}\\n\`;
-                                        
-                                        if (grandChild.children && grandChild.children.length > 0) {
-                                            grandChild.children.forEach(item => {
-                                                markdown += \`- \${item.text}\\n\`;
-                                            });
-                                        }
-                                    });
-                                }
-                            });
-                        }
-                    });
-                    return markdown;
+                    return {
+                        content: 'Mindmap',
+                        children: nodes.map(node => ({
+                            content: node.text,
+                            children: node.children && node.children.length > 0 ? 
+                                node.children.map(child => ({
+                                    content: child.text,
+                                    children: child.children && child.children.length > 0 ?
+                                        child.children.map(grandChild => ({
+                                            content: grandChild.text,
+                                            children: grandChild.children && grandChild.children.length > 0 ?
+                                                grandChild.children.map(item => ({
+                                                    content: item.text,
+                                                    children: []
+                                                })) : []
+                                        })) : []
+                                })) : []
+                        }))
+                    };
                 };
                 
-                const markdown = treeToMarkdown(treeData);
-                console.log('Generated markdown:', markdown);
-                
-                // Transform markdown to markmap data using Transformer class
-                const transformer = new Transformer();
-                const { root, features } = transformer.transform(markdown);
-                console.log('Transformed data:', root);
-                
-                // Load required CSS and JS assets
-                const { styles, scripts } = transformer.getUsedAssets(features);
-                console.log('Assets:', { styles, scripts });
-                
-                if (styles) mm.loadCSS(styles);
-                if (scripts) {
-                    mm.loadJS(scripts, { getMarkmap: () => mm });
-                }
+                const markmapData = treeToMarkmapData(treeData);
+                console.log('Markmap data:', markmapData);
                 
                 // Hide loading, show markmap
                 const loading = document.getElementById('loading');
@@ -760,58 +701,13 @@ markmap:
                 if (loading) loading.style.display = 'none';
                 if (markmapSvg) markmapSvg.style.display = 'block';
                 
-                // Create the markmap with full functionality
-                const markmap = Markmap.create('#mm-svg', {
-                    // Custom styling options
-                    color: (d) => {
-                        const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
-                        return colors[d.depth % colors.length];
-                    },
-                    duration: 500,
-                    maxWidth: 300,
-                    initialExpandLevel: 2,
-                    zoom: true,
-                    pan: true,
-                    paddingX: 20,
-                    paddingY: 20,
-                    // Additional styling options
-                    nodeMinHeight: 20,
-                    spacingVertical: 8,
-                    spacingHorizontal: 120
-                }, root);
+                // Create the markmap using the official approach
+                const markmap = Markmap.create('#mm-svg', deriveOptions({
+                    colorFreezeLevel: 2
+                }), markmapData);
                 
-                // Ensure the markmap fits the container properly and apply styling
-                setTimeout(() => {
-                    if (markmap && markmap.fit) {
-                        markmap.fit();
-                    }
-                    
-                    // Force apply our custom styling
-                    const svg = document.querySelector('#mm-svg');
-                    if (svg) {
-                        // Apply styles to all nodes and links
-                        const nodes = svg.querySelectorAll('.node circle');
-                        const links = svg.querySelectorAll('.link');
-                        const texts = svg.querySelectorAll('.node text');
-                        
-                        nodes.forEach(node => {
-                            node.style.fill = '#667eea';
-                            node.style.stroke = '#667eea';
-                            node.style.strokeWidth = '2px';
-                        });
-                        
-                        links.forEach(link => {
-                            link.style.stroke = '#667eea';
-                            link.style.strokeWidth = '2px';
-                        });
-                        
-                        texts.forEach(text => {
-                            text.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-                            text.style.fontSize = '14px';
-                            text.style.fill = '#333';
-                        });
-                    }
-                }, 200);
+                // Store globally for debugging
+                window.mm = markmap;
                 
                 console.log('Interactive markmap loaded successfully!');
                 
