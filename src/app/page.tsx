@@ -457,7 +457,6 @@ markmap:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${mapTitle || 'Mindmap'}</title>
     <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/index.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.18.12/dist/browser/index.min.js"></script>
     <style>
         body {
             margin: 0;
@@ -503,29 +502,20 @@ markmap:
         // Wait for markmap library to load
         function initMarkmap() {
             console.log('Checking for markmap library...');
-            console.log('window.markmap:', window.markmap);
-            console.log('window.markmapView:', window.markmapView);
             
-            // Try different ways to access the library
-            let Markmap;
-            if (window.markmap && window.markmap.Markmap) {
-                Markmap = window.markmap.Markmap;
-                console.log('Found Markmap in window.markmap.Markmap');
-            } else if (window.markmapView && window.markmapView.Markmap) {
-                Markmap = window.markmapView.Markmap;
-                console.log('Found Markmap in window.markmapView.Markmap');
-            } else if (window.Markmap) {
-                Markmap = window.Markmap;
-                console.log('Found Markmap in window.Markmap');
-            } else {
-                console.log('Markmap library not found, retrying...');
+            // Check if the library is loaded
+            if (typeof window.markmap === 'undefined') {
+                console.log('Markmap library not loaded yet, retrying...');
                 setTimeout(initMarkmap, 200);
                 return;
             }
             
             try {
+                console.log('Markmap library found:', window.markmap);
                 console.log('Creating markmap instance...');
-                const mm = Markmap.create('#markmap');
+                
+                // Create markmap instance
+                const mm = window.markmap.Markmap.create('#markmap');
                 
                 // Markmap data from tree structure
                 const treeData = ${JSON.stringify(treeData)};
@@ -566,7 +556,7 @@ markmap:
         }
         
         // Start initialization after a short delay to ensure scripts are loaded
-        setTimeout(initMarkmap, 500);
+        setTimeout(initMarkmap, 1000);
     </script>
 </body>
 </html>`
@@ -590,8 +580,8 @@ markmap:
       console.error("Export error:", error)
     }
   }
-    
-    return (
+            
+            return (
     <div className="flex flex-col lg:flex-row bg-background h-full">
       {/* Mobile Layout: Stacked (Markdown Editor on top, View on bottom) */}
       <div className="lg:hidden flex flex-col h-full">
@@ -763,7 +753,7 @@ markmap:
                               if (markdown.trim()) {
                                 setMarkdownContent(markdown)
                                 toast.success("Tree converted to markdown successfully")
-                              } else {
+          } else {
                                 toast.error("No tree data to convert")
                               }
                             }
