@@ -572,16 +572,62 @@ markmap:
     <script src="https://cdn.jsdelivr.net/npm/markmap-lib@0.16.3/dist/browser/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.4/dist/browser/index.min.js"></script>
     
+    <!-- Debug script to check library loading -->
     <script>
-        (async () => {
+        console.log('=== LIBRARY LOADING DEBUG ===');
+        console.log('D3 loaded:', typeof d3 !== 'undefined');
+        console.log('Markmap lib loaded:', typeof window.markmap !== 'undefined');
+        console.log('Markmap view loaded:', typeof window.markmap !== 'undefined');
+        
+        if (typeof window.markmap !== 'undefined') {
+            console.log('Markmap object:', window.markmap);
+            console.log('Markmap methods:', Object.keys(window.markmap));
+        }
+    </script>
+    
+    <script>
+        // Wait for all libraries to load
+        window.addEventListener('load', function() {
+            console.log('Page loaded, checking libraries...');
+            
+            // Check if libraries are available
+            if (typeof window.markmap === 'undefined') {
+                console.error('markmap-view not loaded');
+                showFallback();
+                return;
+            }
+            
+            if (typeof window.markmap.transform === 'undefined') {
+                console.error('markmap-lib not loaded');
+                showFallback();
+                return;
+            }
+            
+            console.log('Libraries loaded successfully');
+            initializeMarkmap();
+        });
+        
+        function showFallback() {
+            console.log('Showing static fallback');
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('markmap').style.display = 'none';
+            document.getElementById('static-fallback').style.display = 'block';
+        }
+        
+        function initializeMarkmap() {
             try {
+                console.log('Initializing markmap...');
+                
                 // Access the global objects
                 const { markmap } = window;
                 const { Markmap, loadCSS, loadJS } = markmap;
                 const { transform } = window.markmap;
                 
+                console.log('Markmap objects:', { markmap, Markmap, loadCSS, loadJS, transform });
+                
                 // Transform tree data to markdown first, then to markmap format
                 const treeData = ${JSON.stringify(treeData)};
+                console.log('Tree data:', treeData);
                 
                 // Convert tree to markdown format
                 const treeToMarkdown = (nodes) => {
@@ -627,6 +673,8 @@ markmap:
                 
                 // Load required CSS and JS assets
                 const { styles, scripts } = markmap.getAssets();
+                console.log('Assets:', { styles, scripts });
+                
                 if (styles) loadCSS(styles);
                 if (scripts) {
                     loadJS(scripts, {
@@ -655,14 +703,10 @@ markmap:
                 console.log('Interactive markmap loaded successfully!');
                 
             } catch (error) {
-                console.warn('Interactive version failed, showing static version:', error);
-                
-                // Hide loading and markmap, show static fallback
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('markmap').style.display = 'none';
-                document.getElementById('static-fallback').style.display = 'block';
+                console.error('Error initializing markmap:', error);
+                showFallback();
             }
-        })();
+        }
     </script>
 </body>
 </html>`
