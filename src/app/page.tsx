@@ -618,12 +618,16 @@ markmap:
             try {
                 console.log('Initializing markmap...');
                 
-                // Access the global objects
+                // Access the global objects correctly
                 const { markmap } = window;
                 const { Markmap, loadCSS, loadJS } = markmap;
-                const { transform } = window.markmap;
                 
-                console.log('Markmap objects:', { markmap, Markmap, loadCSS, loadJS, transform });
+                // The transform function is in window.markmap, not window.markmap.transform
+                const transform = window.markmap.transform;
+                
+                console.log('Markmap objects:', { markmap, Markmap, loadCSS, loadJS });
+                console.log('Transform function:', transform);
+                console.log('Available markmap methods:', Object.keys(window.markmap));
                 
                 // Transform tree data to markdown first, then to markmap format
                 const treeData = ${JSON.stringify(treeData)};
@@ -649,7 +653,7 @@ markmap:
                                     child.children.forEach(grandChild => {
                                         const grandChildLevel = grandChild.level || childLevel + 1;
                                         const grandChildPrefix = '#'.repeat(grandChildLevel);
-                                        markdown += \`\${grandChildPrefix} \${grandChild.text}\\n\`;
+                                        markdown += \`\${childPrefix} \${grandChild.text}\\n\`;
                                         
                                         if (grandChild.children && grandChild.children.length > 0) {
                                             grandChild.children.forEach(item => {
@@ -667,7 +671,7 @@ markmap:
                 const markdown = treeToMarkdown(treeData);
                 console.log('Generated markdown:', markdown);
                 
-                // Transform markdown to markmap data
+                // Transform markdown to markmap data using the correct transform function
                 const { root, features } = transform(markdown);
                 console.log('Transformed data:', root);
                 
