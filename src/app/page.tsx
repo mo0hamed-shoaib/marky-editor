@@ -456,7 +456,7 @@ markmap:
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${mapTitle || 'Mindmap'}</title>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/index.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/index.min.js" type="module"></script>
     <style>
         body {
             margin: 0;
@@ -465,11 +465,7 @@ markmap:
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #ffffff;
         }
-        #markmap {
-            width: 100%;
-            height: 100%;
-        }
-        .markmap-container {
+        #mindmap-container {
             width: 100%;
             height: 100%;
         }
@@ -495,27 +491,20 @@ markmap:
 </head>
 <body>
     <div id="loading" class="loading">Loading Mindmap...</div>
-    <div id="markmap" class="markmap-container" style="display: none;"></div>
+    <div id="mindmap-container" style="display: none;"></div>
     <div id="error" class="error" style="display: none;"></div>
     
-    <script>
-        // Wait for markmap library to load
-        function initMarkmap() {
-            console.log('Checking for markmap library...');
-            
-            // Check if the library is loaded
-            if (typeof window.markmap === 'undefined') {
-                console.log('Markmap library not loaded yet, retrying...');
-                setTimeout(initMarkmap, 200);
-                return;
-            }
-            
+    <script type="module">
+        // Import markmap library
+        import { Markmap } from 'https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/index.min.js';
+        
+        // Wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', function() {
             try {
-                console.log('Markmap library found:', window.markmap);
                 console.log('Creating markmap instance...');
                 
                 // Create markmap instance
-                const mm = window.markmap.Markmap.create('#markmap');
+                const mm = Markmap.create('#mindmap-container');
                 
                 // Markmap data from tree structure
                 const treeData = ${JSON.stringify(treeData)};
@@ -541,7 +530,7 @@ markmap:
                     
                     // Hide loading, show markmap
                     document.getElementById('loading').style.display = 'none';
-                    document.getElementById('markmap').style.display = 'block';
+                    document.getElementById('mindmap-container').style.display = 'block';
                     console.log('Markmap loaded successfully!');
                 } else {
                     document.getElementById('loading').innerHTML = 'No data to display';
@@ -553,10 +542,7 @@ markmap:
                 document.getElementById('error').style.display = 'block';
                 document.getElementById('error').innerHTML = 'Error loading mindmap: ' + error.message;
             }
-        }
-        
-        // Start initialization after a short delay to ensure scripts are loaded
-        setTimeout(initMarkmap, 1000);
+        });
     </script>
 </body>
 </html>`
