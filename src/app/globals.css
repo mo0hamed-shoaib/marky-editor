@@ -227,10 +227,6 @@ textarea {
     min-height: 0;
   }
   
-  /* Mobile-friendly tree node buttons */
-  .tree-node-buttons {
-    opacity: 1 !important;
-  }
 }
 
 /* Sonner Toast Customization */

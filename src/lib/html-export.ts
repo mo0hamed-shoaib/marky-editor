@@ -1,4 +1,3 @@
-import { TreeNode } from '@/types/tree';
 import { transformer } from '@/lib/markmap';
 
 // Use the official markmap IPureNode interface
@@ -11,16 +10,6 @@ interface IPureNode {
   };
 }
 
-// Convert our TreeNode to IPureNode format
-const convertTreeNodeToPureNode = (node: TreeNode): IPureNode => {
-  return {
-    content: node.text,
-    children: node.children.map(convertTreeNodeToPureNode),
-    payload: {
-      fold: 0, // Default to not folded
-    },
-  };
-};
 
 // Convert markdown to IPureNode using official markmap transformer
 export const markdownToMarkmapData = (markdown: string) => {
@@ -29,51 +18,14 @@ export const markdownToMarkmapData = (markdown: string) => {
   return { root, features };
 };
 
-// Generate static HTML representation of the mindmap
-export const generateStaticHTML = (nodes: TreeNode[]): string => {
-  if (!Array.isArray(nodes) || nodes.length === 0) {
-    return '<div style="text-align: center; color: #666; padding: 40px;">No mindmap data to display</div>';
-  }
-  
-  const renderNode = (node: TreeNode, depth: number = 0): string => {
-    const indent = depth * 30;
-    const isRoot = depth === 0;
-    
-    let html = '';
-    
-    if (isRoot) {
-      html += `<div class="mindmap-node" style="margin-left: ${indent}px;">${node.text}</div>`;
-    } else {
-      html += `<div class="mindmap-child" style="margin-left: ${indent}px;">${node.text}</div>`;
-    }
-    
-    if (node.children && node.children.length > 0) {
-      html += `<div class="mindmap-children">`;
-      node.children.forEach(child => {
-        html += renderNode(child, depth + 1);
-      });
-      html += `</div>`;
-    }
-    
-    return html;
-  };
-  
-  return nodes.map(node => renderNode(node)).join('');
-};
 
 // Generate complete interactive HTML using official markmap approach
-export const generateMarkmapHTML = (markdownContent: string, mapTitle: string, treeData: TreeNode[]): string => {
+export const generateMarkmapHTML = (markdownContent: string, mapTitle: string): string => {
   let transformResult;
   
   if (markdownContent.trim()) {
     // Use the official markmap transformer to process the markdown
     transformResult = markdownToMarkmapData(markdownContent);
-  } else if (treeData.length > 0) {
-    // Fallback to tree data
-    transformResult = {
-      root: { content: 'Mindmap', children: treeData.map(convertTreeNodeToPureNode) },
-      features: {}
-    };
   } else {
     // Empty mindmap
     transformResult = {
