@@ -1,7 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
@@ -29,15 +28,8 @@ import {
 import { AIAssistant } from "@/components/ai-assistant"
 import { AIResponse } from "@/lib/ai-service"
 import { MarkmapViewer } from "@/components/markmap-viewer"
+import { TreeNode } from "@/types/tree"
 import { toast } from "sonner"
-
-// Define proper types for tree nodes
-interface TreeNode {
-  id: string
-  text: string
-  level: number
-  children: TreeNode[]
-}
 
 export default function MarkyPage() {
   const [markdownContent, setMarkdownContent] = useState(`# Marky
@@ -217,76 +209,6 @@ markmap:
     return markdown
   }
 
-  // Convert markdown to tree data structure
-  const markdownToTree = (markdown: string) => {
-    const lines = markdown.split('\n').filter(line => line.trim())
-    const tree: TreeNode[] = []
-    const stack: { node: TreeNode; level: number }[] = []
-    
-    lines.forEach(line => {
-      const trimmedLine = line.trim()
-      if (!trimmedLine) return
-      
-      // Check for headings
-      const headerMatch = trimmedLine.match(/^(#+)\s+(.+)/)
-      if (headerMatch) {
-        const level = headerMatch[1].length
-        const text = headerMatch[2].trim()
-        const newNode = {
-          id: Date.now().toString() + Math.random(),
-          text: text,
-          level: level,
-          children: []
-        }
-        
-        if (level === 1) {
-          // Root level heading
-          tree.push(newNode)
-          stack.length = 0 // Clear stack
-          stack.push({ node: newNode, level: level })
-        } else {
-          // Find the right parent in the stack
-          while (stack.length > 0 && stack[stack.length - 1].level >= level) {
-            stack.pop()
-          }
-          
-          if (stack.length > 0) {
-            stack[stack.length - 1].node.children.push(newNode)
-            stack.push({ node: newNode, level: level })
-          }
-        }
-        return
-      }
-      
-      // Check for list items
-      const listMatch = trimmedLine.match(/^(\s*)([-*+])\s+(.+)/)
-      if (listMatch) {
-        const indentLevel = Math.floor(listMatch[1].length / 2) + 1
-        const text = listMatch[3].trim()
-        const newNode = {
-          id: Date.now().toString() + Math.random(),
-          text: text,
-          level: indentLevel,
-          children: []
-        }
-        
-        // Find the right parent based on indentation
-        while (stack.length > 0 && stack[stack.length - 1].level >= indentLevel) {
-          stack.pop()
-        }
-        
-        if (stack.length > 0) {
-          stack[stack.length - 1].node.children.push(newNode)
-        } else {
-          // If no parent found, add to root
-          tree.push(newNode)
-        }
-        stack.push({ node: newNode, level: indentLevel })
-      }
-    })
-    
-    return tree
-  }
 
   // Render tree node component
   const renderTreeNode = (node: TreeNode, depth: number = 0) => {
@@ -434,37 +356,6 @@ markmap:
     event.target.value = ""
   }
 
-  // Generate static HTML representation of the mindmap
-  const generateStaticHTML = (nodes: TreeNode[]): string => {
-    if (!Array.isArray(nodes) || nodes.length === 0) {
-      return '<div style="text-align: center; color: #666; padding: 40px;">No mindmap data to display</div>';
-    }
-    
-    const renderNode = (node: TreeNode, depth: number = 0): string => {
-      const indent = depth * 30;
-      const isRoot = depth === 0;
-      
-      let html = '';
-      
-      if (isRoot) {
-        html += `<div class="mindmap-node" style="margin-left: ${indent}px;">${node.text}</div>`;
-      } else {
-        html += `<div class="mindmap-child" style="margin-left: ${indent}px;">${node.text}</div>`;
-      }
-      
-      if (node.children && node.children.length > 0) {
-        html += `<div class="mindmap-children">`;
-        node.children.forEach(child => {
-          html += renderNode(child, depth + 1);
-        });
-        html += `</div>`;
-      }
-      
-      return html;
-    };
-    
-    return nodes.map(node => renderNode(node)).join('');
-  };
 
   // Handle file export as interactive HTML
   const handleExport = () => {
@@ -481,258 +372,27 @@ markmap:
       console.log('Exporting tree data:', treeData);
       console.log('Markdown content:', markdownContent);
       
-      // Create complete interactive HTML with full markmap functionality
-      const htmlContent = `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${mapTitle || 'Mindmap'}</title>
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-            height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
-        }
+      // Import the HTML generator utility
+      import('@/lib/html-export').then(({ generateMarkmapHTML }) => {
+        const htmlContent = generateMarkmapHTML(markdownContent, mapTitle, treeData);
         
-        #mm-svg {
-            width: 100%;
-            height: 100vh;
-            border: none;
-            background: #ffffff;
-        }
+        const blob = new Blob([htmlContent], { type: 'text/html' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${mapTitle || 'mindmap'}.html`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
         
-        /* Markmap styling - let markmap handle its own styling */
-        #mm-svg {
-            width: 100%;
-            height: 100%;
-        }
-        
-        #static-fallback {
-            display: none;
-            padding: 20px;
-            max-width: 800px;
-            margin: 0 auto;
-            line-height: 1.6;
-        }
-        
-        .mindmap-node {
-            margin: 10px 0;
-            padding: 12px 16px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border-radius: 8px;
-            font-weight: bold;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        }
-        
-        .mindmap-children {
-            margin-left: 30px;
-            border-left: 3px solid #e2e8f0;
-            padding-left: 20px;
-        }
-        
-        .mindmap-child {
-            background: #f8f9fa;
-            color: #333;
-            margin: 8px 0;
-            padding: 10px 14px;
-            border-radius: 6px;
-            border: 1px solid #e2e8f0;
-        }
-        
-        .loading {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            font-size: 18px;
-            color: #666;
-        }
-        
-        .fallback-notice {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: #856404;
-            text-align: center;
-        }
-    </style>
-</head>
-<body>
-    <div id="loading" class="loading">Loading Interactive Mindmap...</div>
-    <svg id="mm-svg" style="display: none;"></svg>
-    <div id="static-fallback" style="display: none;">
-        <div class="fallback-notice">
-            <strong>📱 Static View Mode</strong><br>
-            Interactive features unavailable, but your mindmap is fully visible below.
-        </div>
-        ${generateStaticHTML(treeData)}
-    </div>
-    
-    <!-- Load all dependencies as scripts for maximum compatibility -->
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js"></script>
-    
-    <!-- Debug script to check library loading -->
-    <script>
-        console.log('=== LIBRARY LOADING DEBUG ===');
-        console.log('D3 loaded:', typeof d3 !== 'undefined');
-        
-        // Check the correct namespace (window.markmap)
-        console.log('Markmap namespace:', window.markmap);
-        
-        if (window.markmap) {
-            console.log('Markmap methods:', Object.keys(window.markmap));
-            console.log('Has Markmap:', !!window.markmap.Markmap);
-            console.log('Has deriveOptions:', !!window.markmap.deriveOptions);
-            console.log('Has loadCSS:', !!window.markmap.loadCSS);
-            console.log('Has loadJS:', !!window.markmap.loadJS);
-        }
-    </script>
-    
-    <script>
-        // Wait for all libraries to load
-        window.addEventListener('load', function() {
-            console.log('Page loaded, checking libraries...');
-            
-            // Check if libraries are available (official approach)
-            if (typeof window.markmap === 'undefined') {
-                console.error('markmap library not loaded');
-                showFallback();
-                return;
-            }
-            
-            if (!window.markmap.Markmap) {
-                console.error('markmap-view (Markmap) not loaded');
-                showFallback();
-                return;
-            }
-            
-            if (!window.markmap.deriveOptions) {
-                console.error('markmap deriveOptions not loaded');
-                showFallback();
-                return;
-            }
-            
-            console.log('Libraries loaded successfully');
-            initializeMarkmap();
-        });
-        
-        function showFallback() {
-            console.log('Showing static fallback');
-            const loading = document.getElementById('loading');
-            const markmap = document.getElementById('mm-svg');
-            const fallback = document.getElementById('static-fallback');
-            
-            if (loading) loading.style.display = 'none';
-            if (markmap) markmap.style.display = 'none';
-            if (fallback) fallback.style.display = 'block';
-        }
-        
-        function initializeMarkmap() {
-            try {
-                console.log('Initializing markmap...');
-                
-                // Based on markmap.js.org implementation, use the correct approach
-                // The libraries should expose themselves as global objects
-                
-                // Grab the single namespace as described by the expert
-                const mm = window.markmap;
-                if (!mm) {
-                    throw new Error('markmap library not loaded');
-                }
-                
-                console.log('Markmap namespace found:', mm);
-                console.log('Available methods:', Object.keys(mm));
-                
-                // Get the required classes and functions
-                const { Markmap, deriveOptions } = mm;
-                
-                if (!Markmap) {
-                    throw new Error('Markmap class not found');
-                }
-                if (!deriveOptions) {
-                    throw new Error('deriveOptions function not found');
-                }
-                
-                console.log('Required classes found:', { Markmap, deriveOptions });
-                
-                // Transform tree data to markdown first, then to markmap format
-                const treeData = ${JSON.stringify(treeData)};
-                console.log('Tree data:', treeData);
-                
-                // Convert tree data to markmap format (like official site)
-                const treeToMarkmapData = (nodes) => {
-                    if (!Array.isArray(nodes) || nodes.length === 0) return { content: 'Empty', children: [] };
-                    
-                    return {
-                        content: 'Mindmap',
-                        children: nodes.map(node => ({
-                            content: node.text,
-                            children: node.children && node.children.length > 0 ? 
-                                node.children.map(child => ({
-                                    content: child.text,
-                                    children: child.children && child.children.length > 0 ?
-                                        child.children.map(grandChild => ({
-                                            content: grandChild.text,
-                                            children: grandChild.children && grandChild.children.length > 0 ?
-                                                grandChild.children.map(item => ({
-                                                    content: item.text,
-                                                    children: []
-                                                })) : []
-                                        })) : []
-                                })) : []
-                        }))
-                    };
-                };
-                
-                const markmapData = treeToMarkmapData(treeData);
-                console.log('Markmap data:', markmapData);
-                
-                // Hide loading, show markmap
-                const loading = document.getElementById('loading');
-                const markmapSvg = document.getElementById('mm-svg');
-                
-                if (loading) loading.style.display = 'none';
-                if (markmapSvg) markmapSvg.style.display = 'block';
-                
-                // Create the markmap using the official approach
-                const markmap = Markmap.create('#mm-svg', deriveOptions({
-                    colorFreezeLevel: 2
-                }), markmapData);
-                
-                // Store globally for debugging
-                window.mm = markmap;
-                
-                console.log('Interactive markmap loaded successfully!');
-                
-            } catch (error) {
-                console.error('Error initializing markmap:', error);
-                showFallback();
-            }
-        }
-    </script>
-</body>
-</html>`
-      
-      const blob = new Blob([htmlContent], { type: 'text/html' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${mapTitle || 'mindmap'}.html`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-      
-      toast.success("HTML Exported!", {
-        description: `Successfully exported "${mapTitle || 'mindmap'}.html"`,
-        duration: 6000,
+        toast.success("HTML Exported!", {
+          description: `Successfully exported "${mapTitle || 'mindmap'}.html"`,
+          duration: 6000,
+        })
+      }).catch((error) => {
+        toast.error("Failed to export HTML file. Please try again.")
+        console.error("Export error:", error)
       })
     } catch (error) {
       toast.error("Failed to export HTML file. Please try again.")
@@ -900,33 +560,6 @@ markmap:
                         <Plus className="h-4 w-4" />
                         Add Root Item
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          try {
-                            if (markdownContent.trim()) {
-                              setShowOverwriteDialog(true)
-                            } else {
-                              const markdown = treeToMarkdown(treeData)
-                              if (markdown.trim()) {
-                                setMarkdownContent(markdown)
-                                toast.success("Tree converted to markdown successfully")
-          } else {
-                                toast.error("No tree data to convert")
-                              }
-                            }
-                          } catch (error) {
-                            toast.error("Failed to convert tree to markdown. Please try again.")
-                            console.error("Conversion error:", error)
-                          }
-                        }}
-                        className="flex items-center gap-2"
-                        aria-label="Convert tree structure to markdown format"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Convert Tree to Markdown
-                      </Button>
                     </div>
               </div>
                   
@@ -1069,33 +702,6 @@ markmap:
                       >
                         <Plus className="h-4 w-4" />
                         Add Root Item
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          try {
-                            if (markdownContent.trim()) {
-                              setShowOverwriteDialog(true)
-                            } else {
-                              const markdown = treeToMarkdown(treeData)
-                              if (markdown.trim()) {
-                                setMarkdownContent(markdown)
-                                toast.success("Tree converted to markdown successfully")
-                              } else {
-                                toast.error("No tree data to convert")
-                              }
-                            }
-                          } catch (error) {
-                            toast.error("Failed to convert tree to markdown. Please try again.")
-                            console.error("Conversion error:", error)
-                          }
-                        }}
-                        className="flex items-center gap-2"
-                        aria-label="Convert tree structure to markdown format"
-                      >
-                        <FileText className="h-4 w-4" />
-                        Convert Tree to Markdown
                       </Button>
                     </div>
                   </div>
