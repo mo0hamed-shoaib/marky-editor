@@ -505,31 +505,42 @@ markmap:
         }
         
         /* Markmap styling to match our website */
-        .markmap-svg {
+        #mm-svg {
             width: 100% !important;
             height: 100% !important;
         }
         
-        .markmap-svg .node {
+        /* Target the actual markmap SVG elements */
+        #mm-svg .node {
             cursor: pointer;
         }
         
-        .markmap-svg .node circle {
-            fill: #667eea;
-            stroke: #667eea;
-            stroke-width: 2px;
+        #mm-svg .node circle {
+            fill: #667eea !important;
+            stroke: #667eea !important;
+            stroke-width: 2px !important;
         }
         
-        .markmap-svg .node text {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px;
-            fill: #333;
+        #mm-svg .node text {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            font-size: 14px !important;
+            fill: #333 !important;
         }
         
-        .markmap-svg .link {
-            fill: none;
-            stroke: #667eea;
-            stroke-width: 2px;
+        #mm-svg .link {
+            fill: none !important;
+            stroke: #667eea !important;
+            stroke-width: 2px !important;
+        }
+        
+        /* Additional markmap styling */
+        #mm-svg .markmap-node {
+            fill: #667eea !important;
+        }
+        
+        #mm-svg .markmap-link {
+            stroke: #667eea !important;
+            stroke-width: 2px !important;
         }
         
         #static-fallback {
@@ -762,15 +773,45 @@ markmap:
                     zoom: true,
                     pan: true,
                     paddingX: 20,
-                    paddingY: 20
+                    paddingY: 20,
+                    // Additional styling options
+                    nodeMinHeight: 20,
+                    spacingVertical: 8,
+                    spacingHorizontal: 120
                 }, root);
                 
-                // Ensure the markmap fits the container properly
+                // Ensure the markmap fits the container properly and apply styling
                 setTimeout(() => {
                     if (markmap && markmap.fit) {
                         markmap.fit();
                     }
-                }, 100);
+                    
+                    // Force apply our custom styling
+                    const svg = document.querySelector('#mm-svg');
+                    if (svg) {
+                        // Apply styles to all nodes and links
+                        const nodes = svg.querySelectorAll('.node circle');
+                        const links = svg.querySelectorAll('.link');
+                        const texts = svg.querySelectorAll('.node text');
+                        
+                        nodes.forEach(node => {
+                            node.style.fill = '#667eea';
+                            node.style.stroke = '#667eea';
+                            node.style.strokeWidth = '2px';
+                        });
+                        
+                        links.forEach(link => {
+                            link.style.stroke = '#667eea';
+                            link.style.strokeWidth = '2px';
+                        });
+                        
+                        texts.forEach(text => {
+                            text.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+                            text.style.fontSize = '14px';
+                            text.style.fill = '#333';
+                        });
+                    }
+                }, 200);
                 
                 console.log('Interactive markmap loaded successfully!');
                 
