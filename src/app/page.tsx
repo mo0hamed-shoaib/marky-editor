@@ -497,10 +497,39 @@ markmap:
             background: #ffffff;
         }
         
-        #markmap {
+        #mm-svg {
             width: 100%;
             height: 100vh;
             border: none;
+            background: #ffffff;
+        }
+        
+        /* Markmap styling to match our website */
+        .markmap-svg {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .markmap-svg .node {
+            cursor: pointer;
+        }
+        
+        .markmap-svg .node circle {
+            fill: #667eea;
+            stroke: #667eea;
+            stroke-width: 2px;
+        }
+        
+        .markmap-svg .node text {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 14px;
+            fill: #333;
+        }
+        
+        .markmap-svg .link {
+            fill: none;
+            stroke: #667eea;
+            stroke-width: 2px;
         }
         
         #static-fallback {
@@ -715,13 +744,13 @@ markmap:
                 
                 // Hide loading, show markmap
                 const loading = document.getElementById('loading');
-                const markmap = document.getElementById('mm-svg');
+                const markmapSvg = document.getElementById('mm-svg');
                 
                 if (loading) loading.style.display = 'none';
-                if (markmap) markmap.style.display = 'block';
+                if (markmapSvg) markmapSvg.style.display = 'block';
                 
                 // Create the markmap with full functionality
-                Markmap.create('#mm-svg', {
+                const markmap = Markmap.create('#mm-svg', {
                     // Custom styling options
                     color: (d) => {
                         const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
@@ -731,8 +760,17 @@ markmap:
                     maxWidth: 300,
                     initialExpandLevel: 2,
                     zoom: true,
-                    pan: true
+                    pan: true,
+                    paddingX: 20,
+                    paddingY: 20
                 }, root);
+                
+                // Ensure the markmap fits the container properly
+                setTimeout(() => {
+                    if (markmap && markmap.fit) {
+                        markmap.fit();
+                    }
+                }, 100);
                 
                 console.log('Interactive markmap loaded successfully!');
                 
