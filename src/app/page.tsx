@@ -576,13 +576,20 @@ markmap:
     <script>
         console.log('=== LIBRARY LOADING DEBUG ===');
         console.log('D3 loaded:', typeof d3 !== 'undefined');
-        console.log('Markmap lib loaded:', typeof window.markmap !== 'undefined');
-        console.log('Markmap view loaded:', typeof window.markmap !== 'undefined');
         
-        if (typeof window.markmap !== 'undefined') {
-            console.log('Markmap object:', window.markmap);
-            console.log('Markmap methods:', Object.keys(window.markmap));
-        }
+        // Check what's actually available globally
+        console.log('Available global objects:');
+        console.log('- window.markmap:', window.markmap);
+        console.log('- window.markmapLib:', window.markmapLib);
+        console.log('- window.markmapView:', window.markmapView);
+        console.log('- window.markmapView:', window.markmapView);
+        
+        // Check all global objects that might contain markmap
+        Object.keys(window).forEach(key => {
+            if (key.toLowerCase().includes('markmap')) {
+                console.log('Found markmap-related global:', key, window[key]);
+            }
+        });
     </script>
     
     <script>
@@ -618,43 +625,21 @@ markmap:
             try {
                 console.log('Initializing markmap...');
                 
-                // Debug: Check what's actually available globally
-                console.log('Global objects available:');
-                console.log('- window.markmap:', window.markmap);
-                console.log('- window.markmapView:', window.markmapView);
-                console.log('- window.markmapLib:', window.markmapLib);
-                console.log('- window.markmap:', typeof window.markmap);
+                // Based on markmap.js.org implementation, use the correct approach
+                // The libraries should expose themselves as global objects
                 
-                // Try different ways to access the libraries
-                let markmapView, markmapLib, transform;
-                
-                if (window.markmapView) {
-                    markmapView = window.markmapView;
-                    console.log('Found markmapView:', markmapView);
-                } else if (window.markmap && window.markmap.Markmap) {
-                    markmapView = window.markmap;
-                    console.log('Found markmap with Markmap:', markmapView);
-                } else {
-                    throw new Error('markmap-view library not found');
+                // Check if we have the markmap global object
+                if (!window.markmap) {
+                    throw new Error('markmap library not loaded');
                 }
                 
-                if (window.markmapLib) {
-                    markmapLib = window.markmapLib;
-                    console.log('Found markmapLib:', markmapLib);
-                } else if (window.markmap && window.markmap.transform) {
-                    markmapLib = window.markmap;
-                    console.log('Found markmap with transform:', markmapLib);
-                } else {
-                    throw new Error('markmap-lib library not found');
-                }
+                console.log('Markmap library found:', window.markmap);
+                console.log('Available methods:', Object.keys(window.markmap));
                 
-                // Get the transform function
-                if (markmapLib.transform) {
-                    transform = markmapLib.transform;
-                } else if (markmapLib.markmap && markmapLib.markmap.transform) {
-                    transform = markmapLib.markmap.transform;
-                } else {
-                    throw new Error('transform function not found in markmap-lib');
+                // Get the transform function from markmap-lib
+                const transform = window.markmap.transform;
+                if (!transform || typeof transform !== 'function') {
+                    throw new Error('transform function not found');
                 }
                 
                 console.log('Transform function found:', transform);
@@ -683,7 +668,7 @@ markmap:
                                     child.children.forEach(grandChild => {
                                         const grandChildLevel = grandChild.level || childLevel + 1;
                                         const grandChildPrefix = '#'.repeat(grandChildLevel);
-                                        markdown += \`\${childPrefix} \${grandChild.text}\\n\`;
+                                        markdown += \`\${grandChildPrefix} \${grandChild.text}\\n\`;
                                         
                                         if (grandChild.children && grandChild.children.length > 0) {
                                             grandChild.children.forEach(item => {
@@ -706,13 +691,13 @@ markmap:
                 console.log('Transformed data:', root);
                 
                 // Load required CSS and JS assets
-                const { styles, scripts } = markmapView.getAssets();
+                const { styles, scripts } = window.markmap.getAssets();
                 console.log('Assets:', { styles, scripts });
                 
-                if (styles) markmapView.loadCSS(styles);
+                if (styles) window.markmap.loadCSS(styles);
                 if (scripts) {
-                    markmapView.loadJS(scripts, {
-                        getMarkmap: () => markmapView,
+                    window.markmap.loadJS(scripts, {
+                        getMarkmap: () => window.markmap,
                     });
                 }
                 
@@ -721,7 +706,7 @@ markmap:
                 document.getElementById('markmap').style.display = 'block';
                 
                 // Create the markmap with full functionality
-                markmapView.Markmap.create('#markmap', {
+                window.markmap.Markmap.create('#markmap', {
                     // Custom styling options
                     color: (d) => {
                         const colors = ['#667eea', '#764ba2', '#f093fb', '#f5576c', '#4facfe', '#00f2fe'];
