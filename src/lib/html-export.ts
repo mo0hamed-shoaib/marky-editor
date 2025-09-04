@@ -90,12 +90,13 @@ export const generateMarkmapHTML = (markdownContent: string, mapTitle: string, t
   // Base JavaScript files needed for markmap
   const baseJsFiles = [
     "https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js",
-    "https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js",
-    "https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/browser/index.js"
+    "https://cdn.jsdelivr.net/npm/markmap-view@0.18.12/dist/browser/index.js"
   ];
   
   // Build CSS content
   const cssContent = [
+    // Include toolbar CSS
+    '<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.12/dist/style.css">',
     ...(assets.styles || []).map(style => {
       if (typeof style === 'string') {
         return `<link rel="stylesheet" href="${style}">`;
@@ -136,17 +137,90 @@ export const generateMarkmapHTML = (markdownContent: string, mapTitle: string, t
         const options = (getOptions || markmap.deriveOptions)(jsonOptions);
         window.mm = markmap.Markmap.create("svg#mindmap", options, root);
         
-        // Add toolbar
-        setTimeout(() => {
-          if (window.markmap && window.markmap.Toolbar) {
-            const { Toolbar } = window.markmap;
-            const toolbar = new Toolbar();
-            toolbar.attach(window.mm);
-            const toolbarEl = toolbar.render();
-            toolbarEl.setAttribute("style", "position:absolute;bottom:20px;right:20px");
-            document.body.append(toolbarEl);
+        // Create a custom toolbar that matches the official markmap toolbar
+        function createCustomToolbar() {
+          if (!window.mm) {
+            console.log('Markmap instance not ready yet');
+            return false;
           }
-        }, 100);
+          
+          // Create toolbar container
+          const toolbar = document.createElement('div');
+          toolbar.className = 'mm-toolbar';
+          toolbar.setAttribute("style", "position:absolute;bottom:20px;right:20px;z-index:1000;display:flex;align-items:center;background:rgba(255,255,255,0.9);border:1px solid #e5e7eb;border-radius:0.25rem;padding:0.25rem;box-shadow:0 1px 3px 0 rgba(0,0,0,0.1);");
+          
+          // Create toolbar items
+          const items = [
+            {
+              title: 'Zoom in',
+              icon: 'M9 5v4h-4v2h4v4h2v-4h4v-2h-4v-4z',
+              action: () => window.mm && window.mm.rescale(1.25)
+            },
+            {
+              title: 'Zoom out', 
+              icon: 'M5 9h10v2h-10z',
+              action: () => window.mm && window.mm.rescale(0.8)
+            },
+            {
+              title: 'Fit window size',
+              icon: 'M4 7h2v-2h2v4h-4zM4 13h2v2h2v-4h-4zM16 7h-2v-2h-2v4h4zM16 13h-2v2h-2v-4h4z',
+              action: () => window.mm && window.mm.fit()
+            },
+            {
+              title: 'Toggle dark theme',
+              icon: 'M10 4a6 6 0 0 0 0 12a6 6 0 0 0 0 -12v2a4 4 0 0 1 0 8z',
+              action: () => document.documentElement.classList.toggle('markmap-dark')
+            }
+          ];
+          
+          items.forEach(item => {
+            const button = document.createElement('button');
+            button.title = item.title;
+            button.style.cssText = 'min-width:1rem;cursor:pointer;text-align:center;font-size:0.75rem;line-height:1rem;color:#a1a1aa;background:none;border:none;padding:0.25rem;border-radius:0.25rem;';
+            button.innerHTML = \`<svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2"><path d="\${item.icon}"/></svg>\`;
+            button.addEventListener('click', item.action);
+            button.addEventListener('mouseenter', () => {
+              if (document.documentElement.classList.contains('markmap-dark')) {
+                button.style.backgroundColor = '#52525b';
+                button.style.color = '#f4f4f5';
+              } else {
+                button.style.backgroundColor = '#e4e4e7';
+                button.style.color = '#27272a';
+              }
+            });
+            button.addEventListener('mouseleave', () => {
+              button.style.backgroundColor = 'transparent';
+              if (document.documentElement.classList.contains('markmap-dark')) {
+                button.style.color = '#a1a1aa';
+              } else {
+                button.style.color = '#a1a1aa';
+              }
+            });
+            toolbar.appendChild(button);
+          });
+          
+          document.body.append(toolbar);
+          return true;
+        }
+        
+        // Try to create toolbar with retries
+        let attempts = 0;
+        const maxAttempts = 5;
+        const tryCreateToolbar = () => {
+          attempts++;
+          if (createCustomToolbar()) {
+            return; // Success
+          }
+          if (attempts < maxAttempts) {
+            setTimeout(tryCreateToolbar, 200);
+          } else {
+            console.error('Failed to create toolbar after', maxAttempts, 'attempts');
+          }
+        };
+        
+        // Start trying to create toolbar
+        setTimeout(tryCreateToolbar, 300);
+        
         
         // Dark mode toggle
         if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
@@ -189,7 +263,20 @@ html {
   bottom: 20px;
   right: 20px;
   z-index: 1000;
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e5e7eb;
+  border-radius: 0.25rem;
+  padding: 0.25rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
+
+              .markmap-dark .mm-toolbar {
+                background: rgba(39, 39, 42, 0.9);
+                border-color: #52525b;
+                color: #a1a1aa;
+              }
 </style>
 ${cssContent}
 </head>
