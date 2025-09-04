@@ -108,7 +108,7 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 h-full overflow-y-auto">
       {/* 1. Create Markmap from Prompt */}
       <Card>
         <CardHeader className="pb-2">
@@ -123,6 +123,7 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
             value={createPrompt}
             onChange={(e) => setCreatePrompt(e.target.value)}
             rows={3}
+            className="resize-y min-h-[72px] max-h-[200px] overflow-y-auto pr-2"
             aria-label="Describe the markmap you want to create"
           />
           <Button 
@@ -156,6 +157,7 @@ export function AIAssistant({ onAIResponse, onApplyAIResponse, currentMarkdown, 
             value={convertText}
             onChange={(e) => setConvertText(e.target.value)}
             rows={4}
+            className="resize-y min-h-[96px] max-h-[200px] overflow-y-auto pr-2"
             aria-label="Text content to convert to mindmap format"
           />
           <Button 

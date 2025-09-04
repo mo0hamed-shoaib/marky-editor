@@ -244,7 +244,7 @@ export default function MarkyPage() {
       <div className="hidden lg:flex bg-background h-full w-full">
         {/* Left Sidebar - Markdown Editor */}
         <div className="w-100 border-r bg-muted/30 flex flex-col">
-          <div className="p-4 border-b">
+          <div className="p-4 border-b flex-shrink-0">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-lg font-semibold">Markdown Editor</h2>
@@ -283,49 +283,51 @@ export default function MarkyPage() {
             </div>
           </div>
           
-          <div className="flex-1 p-4 overflow-y-auto">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="markdown">Markdown Content</Label>
-                <Textarea
-                  id="markdown"
-                  value={markdownContent}
-                  onChange={(e) => setMarkdownContent(e.target.value)}
-                  placeholder="Enter your markdown content here..."
-                  className="min-h-[400px] resize-none font-mono text-sm"
-                />
-              </div>
-              
-              <Separator />
-              
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1" asChild>
-                    <label className="cursor-pointer" aria-label="Import markdown file">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Import
-                      <input
-                        type="file"
-                        accept=".md,.markdown"
-                        onChange={handleImport}
-                        className="hidden"
-                        aria-describedby="import-description"
-                      />
-                    </label>
-                  </Button>
-                  <p id="import-description" className="sr-only">
-                    Import a markdown file to load existing mindmap content
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="flex-1" 
-                    onClick={handleExport}
-                    aria-label="Export mindmap as HTML file"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Export HTML
-                  </Button>
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="flex-1 p-4 min-h-0">
+              <div className="space-y-4 h-full flex flex-col">
+                <div className="space-y-2 flex-1 flex flex-col min-h-0">
+                  <Label htmlFor="markdown">Markdown Content</Label>
+                  <Textarea
+                    id="markdown"
+                    value={markdownContent}
+                    onChange={(e) => setMarkdownContent(e.target.value)}
+                    placeholder="Enter your markdown content here..."
+                    className="flex-1 resize-none font-mono text-sm min-h-0"
+                  />
+                </div>
+                
+                <Separator />
+                
+                <div className="space-y-2 flex-shrink-0">
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                      <label className="cursor-pointer" aria-label="Import markdown file">
+                        <Upload className="h-4 w-4 mr-2" />
+                        Import
+                        <input
+                          type="file"
+                          accept=".md,.markdown"
+                          onChange={handleImport}
+                          className="hidden"
+                          aria-describedby="import-description"
+                        />
+                      </label>
+                    </Button>
+                    <p id="import-description" className="sr-only">
+                      Import a markdown file to load existing mindmap content
+                    </p>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="flex-1" 
+                      onClick={handleExport}
+                      aria-label="Export mindmap as HTML file"
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Export HTML
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -351,14 +353,14 @@ export default function MarkyPage() {
 
         {/* Right Sidebar - AI Assistant */}
         <div className="w-100 border-l bg-muted/30 flex flex-col">
-          <div className="px-4 pt-4 pb-2">
+          <div className="px-4 pt-4 pb-2 flex-shrink-0">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-muted-foreground" />
               <h2 className="text-lg font-semibold">AI Assistant</h2>
             </div>
           </div>
           
-          <div className="flex-1 px-4 pb-4 overflow-y-auto">
+          <div className="flex-1 px-4 pb-4 min-h-0">
             <AIAssistant
               onAIResponse={handleAIResponse}
               onApplyAIResponse={() => lastAIResponse && applyAIResponse(lastAIResponse)}
