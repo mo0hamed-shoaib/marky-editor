@@ -26,7 +26,7 @@ export const generateMarkmapHTML = (markdownContent: string, mapTitle: string): 
   if (markdownContent.trim()) {
     // Use the official markmap transformer to process the markdown
     transformResult = markdownToMarkmapData(markdownContent);
-  } else {
+      } else {
     // Empty mindmap
     transformResult = {
       root: { content: 'Empty Mindmap', children: [] },
@@ -165,7 +165,7 @@ export const generateMarkmapHTML = (markdownContent: string, mapTitle: string): 
           }
           if (attempts < maxAttempts) {
             setTimeout(tryCreateToolbar, 200);
-          } else {
+    } else {
             console.error('Failed to create toolbar after', maxAttempts, 'attempts');
           }
         };
@@ -228,7 +228,7 @@ html {
                 background: rgba(39, 39, 42, 0.9);
                 border-color: #52525b;
                 color: #a1a1aa;
-              }
+}
 </style>
 ${cssContent}
 </head>
