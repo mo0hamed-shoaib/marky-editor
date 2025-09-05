@@ -284,7 +284,7 @@ export default function NotesPage() {
         <footer className="border-t bg-background px-6 py-4">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <div>Notes App</div>
-            <div>© 2024 Marky</div>
+            <div>© 2025 Marky</div>
           </div>
         </footer>
       </div>
