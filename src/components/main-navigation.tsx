@@ -1,13 +1,19 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Plus } from "lucide-react"
+import { FileText, Network } from "lucide-react"
 import Image from "next/image"
 
-
 export function MainNavigation() {
+  const pathname = usePathname()
+  
+  // Determine which page we're on and what button to show
+  const isNotesPage = pathname === '/notes'
+  const isMarkmapPage = pathname === '/' || pathname.startsWith('/editor') || pathname.startsWith('/tree-editor')
+  
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
@@ -29,12 +35,22 @@ export function MainNavigation() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button size="sm" asChild>
-              <Link href="/">
-                <Plus className="h-4 w-4 mr-2" />
-                New Mindmap
-              </Link>
-            </Button>
+            {/* Dynamic navigation button */}
+            {isNotesPage ? (
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/">
+                  <Network className="h-4 w-4 mr-2" />
+                  Markmap
+                </Link>
+              </Button>
+            ) : (
+              <Button size="sm" variant="outline" asChild>
+                <Link href="/notes">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Notes
+                </Link>
+              </Button>
+            )}
             <ThemeToggle />
           </div>
         </div>
