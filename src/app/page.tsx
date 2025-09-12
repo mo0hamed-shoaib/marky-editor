@@ -17,6 +17,7 @@ import {
 import { AIAssistant } from "@/components/ai-assistant"
 import { AIResponse } from "@/lib/ai-service"
 import { MarkmapViewer } from "@/components/markmap-viewer"
+import { MarkmapUtils } from "@/lib/markmap-utils"
 import { toast } from "sonner"
 
 export default function MarkyPage() {
@@ -85,10 +86,24 @@ export default function MarkyPage() {
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string
-        setMarkdownContent(content)
-        toast.success("File imported successfully!")
+        const fileName = file.name.toLowerCase()
+        
+        if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
+          // Import HTML file - extract markdown from markmap HTML
+          const extractedMarkdown = MarkmapUtils.extractMarkdownFromHTML(content)
+          setMarkdownContent(extractedMarkdown)
+          toast.success("HTML mindmap imported successfully!")
+        } else if (fileName.endsWith('.md') || fileName.endsWith('.markdown')) {
+          // Import markdown file directly
+          setMarkdownContent(content)
+          toast.success("Markdown file imported successfully!")
+        } else {
+          toast.error("Unsupported file type. Please import .md, .markdown, or .html files.")
+          return
+        }
       } catch (error) {
-        toast.error("Failed to import file. Please try again.")
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        toast.error(`Failed to import file: ${errorMessage}`)
         console.error("Import error:", error)
       }
     }
@@ -166,12 +181,12 @@ export default function MarkyPage() {
                   <div className="space-y-2">
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="flex-1" asChild>
-                        <label className="cursor-pointer" aria-label="Import markdown file">
+                        <label className="cursor-pointer" aria-label="Import markdown or HTML file">
                           <Upload className="h-4 w-4 mr-2" />
                           Import
                           <input
                             type="file"
-                            accept=".md,.markdown"
+                            accept=".md,.markdown,.html,.htm"
                             onChange={handleImport}
                             className="hidden"
                             aria-describedby="mobile-import-description"
@@ -179,7 +194,7 @@ export default function MarkyPage() {
                         </label>
                       </Button>
                       <p id="mobile-import-description" className="sr-only">
-                        Import a markdown file to load existing mindmap content
+                        Import a markdown file (.md) or HTML mindmap file (.html) to load existing content
                       </p>
                       <Button 
                         variant="outline" 
@@ -302,12 +317,12 @@ export default function MarkyPage() {
                 <div className="space-y-2 flex-shrink-0">
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" className="flex-1" asChild>
-                      <label className="cursor-pointer" aria-label="Import markdown file">
+                      <label className="cursor-pointer" aria-label="Import markdown or HTML file">
                         <Upload className="h-4 w-4 mr-2" />
                         Import
                         <input
                           type="file"
-                          accept=".md,.markdown"
+                          accept=".md,.markdown,.html,.htm"
                           onChange={handleImport}
                           className="hidden"
                           aria-describedby="import-description"
@@ -315,7 +330,7 @@ export default function MarkyPage() {
                       </label>
                     </Button>
                     <p id="import-description" className="sr-only">
-                      Import a markdown file to load existing mindmap content
+                      Import a markdown file (.md) or HTML mindmap file (.html) to load existing content
                     </p>
                     <Button 
                       variant="outline" 
