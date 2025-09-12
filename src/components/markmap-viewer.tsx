@@ -44,7 +44,11 @@ export function MarkmapViewer({ markdown, className }: MarkmapViewerProps) {
     if (!mm) return;
     const { root } = transformer.transform(markdown);
     mm.setData(root);
-    mm.fit();
+    
+    // Use requestAnimationFrame to ensure the DOM is fully updated before fitting
+    requestAnimationFrame(() => {
+      mm.fit();
+    });
   }, [markdown]);
 
   // Update Markmap theme when theme changes
@@ -65,8 +69,29 @@ export function MarkmapViewer({ markdown, className }: MarkmapViewerProps) {
     }
     
     // Force re-render to apply theme changes
-    mm.fit();
+    requestAnimationFrame(() => {
+      mm.fit();
+    });
   }, [resolvedTheme, theme]);
+
+  // Auto-fit on container resize
+  useEffect(() => {
+    const mm = refMm.current;
+    const svg = refSvg.current;
+    if (!mm || !svg) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        mm.fit();
+      });
+    });
+
+    resizeObserver.observe(svg);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
 
   return (
     <div className={`relative w-full h-full ${className}`}>
