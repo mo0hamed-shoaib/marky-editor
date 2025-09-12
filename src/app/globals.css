@@ -131,14 +131,31 @@ body {
   overflow: hidden;
 }
 
+/* Allow scrolling on specific pages */
+body.scrollable-page {
+  height: auto;
+  overflow: visible;
+}
+
 main {
   flex-grow: 1;
   overflow: hidden;
 }
 
+/* Allow scrolling on specific pages */
+body.scrollable-page main {
+  overflow: visible;
+}
+
 html {
   height: 100%;
   overflow: hidden;
+}
+
+/* Allow scrolling on specific pages */
+html.scrollable-page {
+  height: auto;
+  overflow: visible;
 }
 
 textarea {
