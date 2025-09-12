@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,29 +18,110 @@ import { AIAssistant } from "@/components/ai-assistant"
 import { AIResponse } from "@/lib/ai-service"
 import { MarkmapViewer } from "@/components/markmap-viewer"
 import { MarkmapUtils } from "@/lib/markmap-utils"
+import { ErrorBoundary } from "@/components/error-boundary"
+import { EmptyState } from "@/components/empty-state"
 import { toast } from "sonner"
 
 export default function MarkyPage() {
-  const [markdownContent, setMarkdownContent] = useState(`# Marky
+  const [markdownContent, setMarkdownContent] = useState(`# Welcome to Marky! 🧠
 ## Getting Started
-### Create your first mindmap
-- Drag and drop nodes
-- Edit text inline
-- Use AI to expand ideas
+### Basic Structure
+- Use # for main topics
+- Use ## for subtopics
+- Use - for details
 
-## Features
-### Visual Editor
-- Intuitive interface
-- Real-time preview
-- Multiple themes
+### Quick Tips
+- Keep topics concise
+- Group related ideas
+- Use clear titles
 
-### AI Integration
-- Smart summarization
-- Auto-expansion
-- Free API usage`)
+## AI Assistant ✨
+### What it can do
+- Generate mindmaps from text
+- Expand your ideas
+- Improve structure
 
-  const [mapTitle, setMapTitle] = useState("Untitled Mindmap")
+### How to use
+- Click the sparkles icon
+- Try "Create a mindmap about..."
+- Ask for expansions
+
+## Import & Export
+### Supported Files
+- Markdown (.md)
+- HTML mindmaps (.html)
+
+### Export Options
+- Standalone HTML files
+- Share with others
+- Print-friendly format`)
+
+  const [mapTitle, setMapTitle] = useState("My First Mindmap")
   const [lastAIResponse, setLastAIResponse] = useState<AIResponse | null>(null)
+
+  // localStorage persistence
+  useEffect(() => {
+    // Load saved data on component mount
+    const savedData = localStorage.getItem('marky-mindmap-data');
+    if (savedData) {
+      try {
+        const { content, title, timestamp } = JSON.parse(savedData);
+        // Only load if saved within last 7 days
+        if (Date.now() - timestamp < 7 * 24 * 60 * 60 * 1000) {
+          setMarkdownContent(content);
+          setMapTitle(title);
+          toast.success("Previous work restored!");
+        }
+      } catch (error) {
+        console.error('Failed to load saved data:', error);
+      }
+    }
+  }, []);
+
+  // Auto-save to localStorage
+  useEffect(() => {
+    const saveData = () => {
+      const data = {
+        content: markdownContent,
+        title: mapTitle,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('marky-mindmap-data', JSON.stringify(data));
+    };
+
+    // Save immediately when content changes
+    saveData();
+
+    // Also save every 30 seconds as backup
+    const interval = setInterval(saveData, 30000);
+    return () => clearInterval(interval);
+  }, [markdownContent, mapTitle]);
+
+  // Clear saved data function
+  const clearSavedData = () => {
+    localStorage.removeItem('marky-mindmap-data');
+    toast.success("Saved data cleared!");
+  };
+
+  // Check if content is truly empty (not the starter content)
+  const isMinimalContent = markdownContent.trim() === "" || markdownContent.trim() === "# My New Mindmap\n## Start typing your ideas here...";
+
+  // Empty state handlers
+  const handleStartCreating = () => {
+    setMarkdownContent("# My New Mindmap\n## Start typing your ideas here...");
+    setMapTitle("My New Mindmap");
+  };
+
+  const handleImportFile = () => {
+    // Trigger file input
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    fileInput?.click();
+  };
+
+  const handleTryAI = () => {
+    // This will be handled by opening the AI assistant sheet
+    toast.info("Open the AI Assistant (✨) to get started!");
+  };
 
   // AI response handlers
   const handleAIResponse = (response: AIResponse) => {
@@ -82,24 +163,45 @@ export default function MarkyPage() {
     const file = event.target.files?.[0]
     if (!file) return
 
+    // File size validation (5MB limit)
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File too large. Please use files under 5MB.")
+      return
+    }
+
+    // File type validation
+    const fileName = file.name.toLowerCase()
+    const allowedExtensions = ['.md', '.markdown', '.html', '.htm']
+    const isValidFile = allowedExtensions.some(ext => fileName.endsWith(ext))
+    
+    if (!isValidFile) {
+      toast.error("Unsupported file type. Please import .md, .markdown, or .html files.")
+      return
+    }
+
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
         const content = e.target?.result as string
-        const fileName = file.name.toLowerCase()
+        
+        // Content length validation (prevent extremely large content)
+        if (content.length > 1000000) { // 1MB of text
+          toast.error("File content is too large. Please use smaller files.")
+          return
+        }
         
         if (fileName.endsWith('.html') || fileName.endsWith('.htm')) {
           // Import HTML file - extract markdown from markmap HTML
           const extractedMarkdown = MarkmapUtils.extractMarkdownFromHTML(content)
           setMarkdownContent(extractedMarkdown)
+          setMapTitle(file.name.replace(/\.(html|htm)$/i, ''))
           toast.success("HTML mindmap imported successfully!")
         } else if (fileName.endsWith('.md') || fileName.endsWith('.markdown')) {
           // Import markdown file directly
           setMarkdownContent(content)
+          setMapTitle(file.name.replace(/\.(md|markdown)$/i, ''))
           toast.success("Markdown file imported successfully!")
-        } else {
-          toast.error("Unsupported file type. Please import .md, .markdown, or .html files.")
-          return
         }
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
@@ -107,11 +209,17 @@ export default function MarkyPage() {
         console.error("Import error:", error)
       }
     }
+    
+    reader.onerror = () => {
+      toast.error("Failed to read file. Please try again.")
+    }
+    
     reader.readAsText(file)
   }
 
   return (
-    <div className="flex flex-col lg:flex-row bg-background h-full">
+    <ErrorBoundary>
+      <div className="flex flex-col lg:flex-row bg-background h-full">
       {/* Mobile Layout: Stacked (Markdown Editor on top, View on bottom) */}
       <div className="lg:hidden flex flex-col h-full">
         {/* Mobile Header with Sheet Triggers */}
@@ -207,6 +315,17 @@ export default function MarkyPage() {
                         Export HTML
                       </Button>
                     </div>
+                    <div className="mt-2">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full text-xs text-muted-foreground hover:text-foreground"
+                        onClick={clearSavedData}
+                        aria-label="Clear saved data"
+                      >
+                        Clear Saved Data
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </SheetContent>
@@ -247,10 +366,18 @@ export default function MarkyPage() {
           </div>
           
           <div className="flex-1 min-h-0">
-            <MarkmapViewer 
-              markdown={markdownContent}
-              className="w-full h-full"
-            />
+            {isMinimalContent ? (
+              <EmptyState 
+                onStartCreating={handleStartCreating}
+                onImportFile={handleImportFile}
+                onTryAI={handleTryAI}
+              />
+            ) : (
+              <MarkmapViewer 
+                markdown={markdownContent}
+                className="w-full h-full"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -343,6 +470,17 @@ export default function MarkyPage() {
                       Export HTML
                     </Button>
                   </div>
+                  <div className="mt-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      onClick={clearSavedData}
+                      aria-label="Clear saved data"
+                    >
+                      Clear Saved Data
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -359,10 +497,18 @@ export default function MarkyPage() {
           </div>
           
           <div className="flex-1 min-h-0">
-            <MarkmapViewer 
-              markdown={markdownContent}
-              className="w-full h-full"
-            />
+            {isMinimalContent ? (
+              <EmptyState 
+                onStartCreating={handleStartCreating}
+                onImportFile={handleImportFile}
+                onTryAI={handleTryAI}
+              />
+            ) : (
+              <MarkmapViewer 
+                markdown={markdownContent}
+                className="w-full h-full"
+              />
+            )}
           </div>
         </div>
 
@@ -385,6 +531,7 @@ export default function MarkyPage() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </ErrorBoundary>
   )
 }
