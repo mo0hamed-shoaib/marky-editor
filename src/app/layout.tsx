@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Marky - Mindmap Application",
-  description: "AI-powered mindmap creation and editing application",
+  title: "Marky - AI-Powered Mindmap Creator",
+  description: "Create beautiful, interactive mindmaps with AI assistance. Visualize your ideas, organize thoughts, and collaborate seamlessly.",
   icons: {
     icon: "/marky-logo.png",
     shortcut: "/marky-logo.png",
