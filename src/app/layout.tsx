@@ -16,8 +16,66 @@ const jetbrainsMono = JetBrains_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Marky - AI-Powered Mindmap Creator",
-  description: "Create beautiful, interactive mindmaps with AI assistance. Visualize your ideas, organize thoughts, and collaborate seamlessly.",
+  title: "Marky - AI-Powered Mindmap Creator | Free Online Tool",
+  description: "Create beautiful mindmaps with AI assistance. Free online tool for visual knowledge mapping, brainstorming, and project planning. Import/export markdown and HTML files.",
+  keywords: [
+    "mindmap",
+    "mind map",
+    "AI mindmap",
+    "visual thinking",
+    "brainstorming",
+    "knowledge mapping",
+    "project planning",
+    "free mindmap tool",
+    "online mindmap",
+    "markdown mindmap",
+    "AI assistant",
+    "visual learning",
+    "idea mapping",
+    "concept mapping"
+  ],
+  authors: [{ name: "Mohamed Gamal", url: "https://github.com/mo0hamed-shoaib" }],
+  creator: "Mohamed Gamal",
+  publisher: "Marky",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://marky-app.vercel.app",
+    title: "Marky - AI-Powered Mindmap Creator",
+    description: "Create beautiful mindmaps with AI assistance. Free online tool for visual knowledge mapping and brainstorming.",
+    siteName: "Marky",
+    images: [
+      {
+        url: "/marky-logo.png",
+        width: 1200,
+        height: 630,
+        alt: "Marky - AI-Powered Mindmap Creator",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Marky - AI-Powered Mindmap Creator",
+    description: "Create beautiful mindmaps with AI assistance. Free online tool for visual knowledge mapping.",
+    images: ["/marky-logo.png"],
+    creator: "@mo0hamed-shoaib",
+  },
+  alternates: {
+    canonical: "https://marky-app.vercel.app",
+  },
+  category: "productivity",
+  classification: "Mindmap Creation Tool",
   icons: {
     icon: "/marky-logo.png",
     shortcut: "/marky-logo.png",
@@ -44,11 +102,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-                  <div className="h-screen flex flex-col">
           <LayoutWrapper>
             {children}
           </LayoutWrapper>
-        </div>
           <Toaster />
         </ThemeProvider>
       </body>
