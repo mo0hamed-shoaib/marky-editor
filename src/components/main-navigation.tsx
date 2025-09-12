@@ -2,6 +2,8 @@
 
 import Link from "next/link"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { Button } from "@/components/ui/button"
+import { BookOpen } from "lucide-react"
 import Image from "next/image"
 
 export function MainNavigation() {
@@ -26,6 +28,12 @@ export function MainNavigation() {
           </div>
 
           <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" asChild>
+              <Link href="/learn">
+                <BookOpen className="h-4 w-4 mr-2" />
+                Learn Markmaps
+              </Link>
+            </Button>
             <ThemeToggle />
           </div>
         </div>
