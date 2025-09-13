@@ -68,9 +68,49 @@ export default function MarkyPage() {
         const { content, title, timestamp } = JSON.parse(savedData);
         // Only load if saved within last 7 days
         if (Date.now() - timestamp < 7 * 24 * 60 * 60 * 1000) {
+          // Check if the saved content is different from starter content
+          const starterContent = `# Welcome to Marky! 🧠
+## Getting Started
+### Basic Structure
+- Use # for main topics
+- Use ## for subtopics
+- Use - for details
+
+### Quick Tips
+- Keep topics concise
+- Group related ideas
+- Use clear titles
+
+## AI Assistant ✨
+### What it can do
+- Generate mindmaps from text
+- Expand your ideas
+- Improve structure
+
+### How to use
+- Click the sparkles icon
+- Try "Create a mindmap about..."
+- Ask for expansions
+
+## Import & Export
+### Supported Files
+- Markdown (.md)
+- HTML mindmaps (.html)
+
+### Export Options
+- Standalone HTML files
+- Share with others
+- Print-friendly format`;
+          
+          const isDifferentFromStarter = content !== starterContent || title !== "My First Mindmap";
+          
           setMarkdownContent(content);
           setMapTitle(title);
-          toast.success("Previous work restored!");
+          
+          // Only show toast if content is actually different from starter
+          if (isDifferentFromStarter) {
+            toast.success("Previous work restored!");
+          }
         }
       } catch (error) {
         console.error('Failed to load saved data:', error);
