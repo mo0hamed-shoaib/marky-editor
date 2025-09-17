@@ -11,6 +11,12 @@ export interface MindmapData {
   nodes: Map<string, MindmapNode>
 }
 
+// Markmap export node structure as found inside HTML exports
+interface MarkmapExportNode {
+  content?: string
+  children?: MarkmapExportNode[]
+}
+
 export class MarkmapUtils {
   static parseMarkdownToMindmap(markdown: string): MindmapData {
     const lines = markdown.split('\n').filter(line => line.trim())
@@ -200,8 +206,7 @@ export class MarkmapUtils {
         { search: 'markmap', description: 'General markmap reference' }
       ];
 
-      let rootData = null;
-      let usedPattern = '';
+      let rootData: MarkmapExportNode | null = null;
 
       // Try each pattern
       for (const pattern of patterns) {
@@ -211,28 +216,16 @@ export class MarkmapUtils {
           
           if (pattern.search === 'const root = ') {
             rootData = this.extractFromConstRoot(htmlContent, index);
-            if (rootData) {
-              usedPattern = pattern.description;
-              break;
-            }
+            if (rootData) break;
           } else if (pattern.search === '((b,L,T,D)=>{') {
             rootData = this.extractFromMarkmapJsOrg(htmlContent, index);
-            if (rootData) {
-              usedPattern = pattern.description;
-              break;
-            }
+            if (rootData) break;
           } else if (pattern.search === 'window.mm = markmap.Markmap.create') {
             rootData = this.extractFromMarkmapCreate(htmlContent, index);
-            if (rootData) {
-              usedPattern = pattern.description;
-              break;
-            }
+            if (rootData) break;
           } else if (pattern.search === 'JSON.stringify') {
-            rootData = this.extractFromJsonStringify(htmlContent, index);
-            if (rootData) {
-              usedPattern = pattern.description;
-              break;
-            }
+            rootData = this.extractFromJsonStringify(htmlContent);
+            if (rootData) break;
           }
         }
       }
@@ -240,9 +233,6 @@ export class MarkmapUtils {
       if (!rootData) {
         // If no pattern worked, try to extract any JSON-like data from script tags
         rootData = this.extractFromScriptTags(htmlContent);
-        if (rootData) {
-          usedPattern = 'Script tag extraction';
-        }
       }
 
       if (!rootData) {
@@ -277,7 +267,7 @@ export class MarkmapUtils {
   /**
    * Extract data from "const root = " pattern
    */
-  private static extractFromConstRoot(htmlContent: string, startIndex: number): any {
+  private static extractFromConstRoot(htmlContent: string, startIndex: number): MarkmapExportNode | null {
     const jsonStartIndex = startIndex + 'const root = '.length;
     
     // Find the end of the JSON object by counting braces
@@ -322,14 +312,14 @@ export class MarkmapUtils {
     }
 
     const jsonString = htmlContent.substring(jsonStartIndex, jsonEndIndex);
-    return JSON.parse(jsonString);
+    return JSON.parse(jsonString) as MarkmapExportNode;
   }
 
   /**
    * Extract data from markmap.js.org IIFE format
    * Pattern: ((b,L,T,D)=>{...})(()=>window.markmap,null,{DATA},null)
    */
-  private static extractFromMarkmapJsOrg(htmlContent: string, startIndex: number): any {
+  private static extractFromMarkmapJsOrg(htmlContent: string, startIndex: number): MarkmapExportNode | null {
     // Find the complete IIFE call
     const iifeStart = htmlContent.indexOf('((b,L,T,D)=>{', startIndex);
     if (iifeStart === -1) {
@@ -437,7 +427,7 @@ export class MarkmapUtils {
     // Extract the JSON string
     const jsonString = htmlContent.substring(jsonStart, jsonEnd);
     try {
-      return JSON.parse(jsonString);
+      return JSON.parse(jsonString) as MarkmapExportNode;
     } catch {
       return null;
     }
@@ -448,13 +438,13 @@ export class MarkmapUtils {
   /**
    * Extract data from markmap.create pattern
    */
-  private static extractFromMarkmapCreate(htmlContent: string, startIndex: number): any {
+  private static extractFromMarkmapCreate(htmlContent: string, startIndex: number): MarkmapExportNode | null {
     // Look for the root parameter in the create call
     const createCall = htmlContent.substring(startIndex, startIndex + 200);
     const rootMatch = createCall.match(/create\([^,]+,\s*([^,)]+)\)/);
     if (rootMatch) {
       try {
-        return JSON.parse(rootMatch[1]);
+        return JSON.parse(rootMatch[1]) as MarkmapExportNode;
       } catch {
         return null;
       }
@@ -465,7 +455,7 @@ export class MarkmapUtils {
   /**
    * Extract data from JSON.stringify pattern
    */
-  private static extractFromJsonStringify(htmlContent: string, startIndex: number): any {
+  private static extractFromJsonStringify(htmlContent: string): MarkmapExportNode | null {
     // Look for JSON.stringify(root) pattern
     const stringifyMatch = htmlContent.match(/JSON\.stringify\(([^)]+)\)/);
     if (stringifyMatch) {
@@ -474,7 +464,7 @@ export class MarkmapUtils {
         const varName = stringifyMatch[1].trim();
         const varMatch = htmlContent.match(new RegExp(`const\\s+${varName}\\s*=\\s*({[^;]+});`));
         if (varMatch) {
-          return JSON.parse(varMatch[1]);
+          return JSON.parse(varMatch[1]) as MarkmapExportNode;
         }
       } catch {
         return null;
@@ -486,7 +476,7 @@ export class MarkmapUtils {
   /**
    * Extract data from script tags
    */
-  private static extractFromScriptTags(htmlContent: string): any {
+  private static extractFromScriptTags(htmlContent: string): MarkmapExportNode | null {
     const scriptMatch = htmlContent.match(/<script[^>]*>([\s\S]*?)<\/script>/);
     if (scriptMatch) {
       const scriptContent = scriptMatch[1];
@@ -496,7 +486,7 @@ export class MarkmapUtils {
       if (jsonMatches) {
         for (const match of jsonMatches) {
           try {
-            const parsed = JSON.parse(match);
+            const parsed = JSON.parse(match) as MarkmapExportNode;
             if (parsed.content && (parsed.children || Array.isArray(parsed))) {
               return parsed;
             }
@@ -515,7 +505,7 @@ export class MarkmapUtils {
    * @param level The current heading level (starts at 1)
    * @returns The markdown representation
    */
-  private static convertMarkmapDataToMarkdown(node: any, level: number = 1): string {
+  private static convertMarkmapDataToMarkdown(node: MarkmapExportNode, level: number = 1): string {
     if (!node) return '';
 
     let markdown = '';
@@ -523,7 +513,7 @@ export class MarkmapUtils {
     // Add the current node as a heading (if it has content and is not empty)
     if (node.content && node.content.trim() && node.content !== 'Empty Mindmap') {
       // Clean up the content - remove HTML entities and tags
-      let cleanContent = node.content
+      const cleanContent = node.content
         .replace(/&quot;/g, '"')
         .replace(/&apos;/g, "'")
         .replace(/&#x2019;/g, "'")
@@ -559,7 +549,7 @@ export class MarkmapUtils {
    * @param level The current level
    * @returns The markdown list representation
    */
-  private static convertChildrenToListItems(node: any, level: number): string {
+  private static convertChildrenToListItems(node: MarkmapExportNode, level: number): string {
     if (!node) return '';
 
     let markdown = '';
@@ -567,7 +557,7 @@ export class MarkmapUtils {
 
     if (node.content && node.content.trim()) {
       // Clean up the content - remove HTML entities and tags
-      let cleanContent = node.content
+      const cleanContent = node.content
         .replace(/&quot;/g, '"')
         .replace(/&apos;/g, "'")
         .replace(/&#x2019;/g, "'")
