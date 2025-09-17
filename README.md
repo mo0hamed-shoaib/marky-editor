@@ -290,11 +290,11 @@ A: Yes, all data is processed locally in your browser. We don't send your mindma
 
 ## 📊 Performance
 
-- **Bundle Size**: ~800KB-1.2MB gzipped
-- **First Load**: ~3-5 seconds on 3G
-- **Interactive**: ~1-2 seconds
+- **Bundle Size**: ~300-500KB gzipped
+- **First Load**: ~1.5-2.5 seconds on 3G
+- **Interactive**: ~0.5-1 second
 - **Accessibility Score**: ~85-90/100
-- **Performance Score**: ~70-80/100
+- **Performance Score**: ~85-90/100
 
 ## 🌟 Show Your Support
 
