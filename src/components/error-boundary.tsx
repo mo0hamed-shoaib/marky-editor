@@ -74,7 +74,7 @@ function DefaultErrorFallback({ error, resetError }: { error: Error; resetError:
         </h1>
         
         <p className="text-muted-foreground mb-4">
-          We encountered an unexpected error. Don't worry, your work is automatically saved.
+          We encountered an unexpected error. Don&apos;t worry, your work is automatically saved.
         </p>
         
         {process.env.NODE_ENV === 'development' && (

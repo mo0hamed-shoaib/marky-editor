@@ -10,7 +10,6 @@ import {
   Download, 
   Upload,
   ArrowRight,
-  CheckCircle,
   Zap
 } from 'lucide-react'
 
