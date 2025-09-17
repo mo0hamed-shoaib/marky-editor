@@ -15,7 +15,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       position="bottom-right"
       duration={6000}
       expand={true}
-      swipeDirection="right"
+      swipeDirections={["right"]}
       style={
         {
           "--normal-bg": "var(--popover)",
