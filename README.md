@@ -1,78 +1,195 @@
-# Marky - AI-Powered Mindmap Creator
+<div align="center">
+  <img src="public/marky-logo.png" alt="Marky Logo" width="120" height="120" />
+  <h1>Marky</h1>
+  <p><strong>AI-Powered Mindmap Creator</strong></p>
+  <p>A modern, intuitive mindmap creation and editing application that transforms your ideas into beautiful visual mindmaps.</p>
+  
+  [![Next.js](https://img.shields.io/badge/Next.js-15-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+  [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-38B2AC?style=flat-square&logo=tailwind-css)](https://tailwindcss.com/)
+  [![shadcn/ui](https://img.shields.io/badge/shadcn%2Fui-0.8-000000?style=flat-square)](https://ui.shadcn.com/)
+</div>
 
-A modern, AI-powered mindmap creation and editing application built with Next.js 15, shadcn/ui, and TypeScript.
+## ✨ Features
 
-## Features
+### 🎯 Core Functionality
+- **🧠 AI-Powered Creation** - Generate mindmaps from text using advanced AI
+- **✏️ Rich Markdown Editor** - Create and edit content with syntax highlighting
+- **🎨 Interactive Visualizations** - Beautiful mindmap rendering with markmap.js
+- **📱 Fully Responsive** - Seamless experience across all devices
+- **🌙 Dark/Light Mode** - Beautiful themes with system preference detection
 
-- 🧠 **AI-Powered Creation** - Generate mindmaps from text using AI
-- ✏️ **Rich Text Editor** - Create and edit markdown content with a powerful editor
-- 🎨 **Beautiful Visualizations** - Interactive mindmap rendering with markmap
-- 📱 **Responsive Design** - Works perfectly on desktop and mobile
-- 🌙 **Dark Mode** - Beautiful dark and light themes
-- 💾 **Export/Import** - Export mindmaps as HTML or import markdown files
-- 🎯 **Real-time Preview** - See your mindmap update as you type
-- 🔧 **Customizable** - Multiple themes and customization options
+### 💾 Data Management
+- **📁 File Import/Export** - Support for `.md`, `.markdown`, `.html`, and `.htm` files
+- **💾 Local Storage** - Automatic saving and restoration of your work
+- **🔄 Auto-save** - Never lose your progress with intelligent auto-saving
+- **📤 HTML Export** - Export mindmaps as standalone HTML files
 
-## Tech Stack
+### 🎨 User Experience
+- **⚡ Real-time Preview** - See your mindmap update instantly as you type
+- **🎯 Smart Auto-fit** - Automatic window sizing for optimal viewing
+- **📚 Learning Center** - Built-in tutorials and markdown guides
+- **🔍 Error Handling** - Graceful error boundaries and user-friendly messages
+- **♿ Accessibility** - WCAG compliant with keyboard navigation support
 
-- **Framework**: Next.js 15 with App Router
-- **UI Components**: shadcn/ui
-- **Styling**: Tailwind CSS
-- **Language**: TypeScript
-- **Mindmap Library**: markmap
-- **Rich Text Editor**: Lexical
-- **Icons**: Lucide React
-- **AI Integration**: Custom AI service
+## 🛠️ Tech Stack
 
-## Getting Started
+### Frontend
+- **⚡ Next.js 15** - React framework with App Router
+- **🎨 shadcn/ui** - Modern, accessible UI components
+- **💅 Tailwind CSS** - Utility-first CSS framework
+- **📘 TypeScript** - Type-safe JavaScript development
 
-1. **Install dependencies**:
+### Libraries & Tools
+- **🗺️ markmap** - Interactive mindmap visualization
+- **✏️ Lexical** - Extensible rich text editor
+- **🎯 Lucide React** - Beautiful icon library
+- **🤖 Custom AI Service** - Intelligent content generation
+- **📦 React Error Boundary** - Graceful error handling
+
+### Development
+- **🔧 ESLint** - Code linting and formatting
+- **📱 Responsive Design** - Mobile-first approach
+- **♿ Accessibility** - WCAG 2.1 compliance
+- **🚀 Performance** - Optimized for speed and efficiency
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ 
+- npm or yarn package manager
+
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/your-username/marky-app.git
+   cd marky-app
+   ```
+
+2. **Install dependencies**:
    ```bash
    npm install
+   # or
+   yarn install
    ```
 
-2. **Run the development server**:
+3. **Run the development server**:
    ```bash
    npm run dev
+   # or
+   yarn dev
    ```
 
-3. **Open your browser**:
+4. **Open your browser**:
    Navigate to [http://localhost:3000](http://localhost:3000)
 
-## Project Structure
-
-```
-src/
-├── app/                 # Next.js App Router
-│   ├── layout.tsx      # Root layout
-│   ├── page.tsx        # Main mindmap page
-│   ├── editor-x/       # Advanced editor
-│   ├── dashboard/      # Dashboard page
-│   └── globals.css     # Global styles
-├── components/         # React components
-│   ├── editor/        # Rich text editor components
-│   ├── blocks/        # Editor blocks and plugins
-│   ├── ui/            # shadcn/ui components
-│   └── ...            # Other components
-├── lib/               # Utilities and services
-│   ├── markmap.ts         # Markmap utilities
-│   ├── markmap-utils.ts   # Markmap helper functions
-│   ├── html-export.ts     # Export functionality
-│   └── ai-service.ts      # AI integration
-└── hooks/             # Custom React hooks
+### Environment Setup (Optional)
+Create a `.env.local` file for custom configuration:
+```env
+NEXT_PUBLIC_GITHUB_URL=https://github.com/your-username
+NEXT_PUBLIC_LINKEDIN_URL=https://linkedin.com/in/your-profile
 ```
 
-## Available Scripts
+## 📁 Project Structure
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+```
+marky-app/
+├── public/                    # Static assets
+│   └── marky-logo.png        # Project logo
+├── src/
+│   ├── app/                  # Next.js App Router
+│   │   ├── layout.tsx        # Root layout with SEO
+│   │   ├── page.tsx          # Main mindmap editor page
+│   │   ├── learn/            # Learning center
+│   │   ├── globals.css       # Global styles & themes
+│   │   ├── sitemap.ts        # SEO sitemap
+│   │   ├── robots.ts         # SEO robots.txt
+│   │   └── not-found.tsx     # Custom 404 page
+│   ├── components/           # React components
+│   │   ├── editor/          # Rich text editor
+│   │   ├── blocks/          # Editor blocks & plugins
+│   │   ├── ui/              # shadcn/ui components
+│   │   ├── markmap-viewer.tsx
+│   │   ├── main-navigation.tsx
+│   │   ├── theme-provider.tsx
+│   │   └── ...              # Other components
+│   ├── lib/                 # Utilities & services
+│   │   ├── markmap.ts       # Markmap core utilities
+│   │   ├── markmap-utils.ts # HTML/MD parsing & conversion
+│   │   ├── html-export.ts   # Export functionality
+│   │   ├── ai-service.ts    # AI integration
+│   │   └── utils.ts         # General utilities
+│   └── hooks/               # Custom React hooks
+├── .env.local               # Environment variables
+├── components.json          # shadcn/ui configuration
+├── tailwind.config.js       # Tailwind CSS config
+└── package.json            # Dependencies & scripts
+```
 
-## Related Projects
+## 📜 Available Scripts
 
-- [Marky Notes](https://github.com/mo0hamed-shoaib/marky-notes) - AI-powered note-taking application
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server on [localhost:3000](http://localhost:3000) |
+| `npm run build` | Build optimized production bundle |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint for code quality checks |
 
-## License
+## 🎯 Usage
 
-MIT License - see LICENSE file for details.
+### Creating Your First Mindmap
+1. **Start with the starter template** - The app provides a helpful starter mindmap
+2. **Edit the markdown** - Use the left panel to modify your content
+3. **Watch it update** - See your changes reflected in real-time on the right
+4. **Export when ready** - Save as HTML or import existing files
+
+### Supported File Formats
+- **Import**: `.md`, `.markdown`, `.html`, `.htm`
+- **Export**: `.html` (standalone files)
+
+### Markdown Features
+- **Headers** (`#`, `##`, `###`) - Create mindmap nodes
+- **Lists** (`-`, `*`, `+`) - Add sub-nodes
+- **Code blocks** - Syntax highlighted code
+- **Tables** - Structured data visualization
+- **Links** - Interactive connections
+- **Emojis** - Visual enhancement
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guidelines](CONTRIBUTING.md) for details.
+
+### Development Workflow
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [markmap](https://github.com/gera2ld/markmap) - The amazing mindmap visualization library
+- [shadcn/ui](https://ui.shadcn.com/) - Beautiful, accessible UI components
+- [Next.js](https://nextjs.org/) - The React framework for production
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/your-username/marky-app/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/marky-app/discussions)
+- **Email**: your-email@example.com
+
+---
+
+<div align="center">
+  <p>Made with ❤️ by <strong>Jimmy</strong></p>
+  <p>
+    <a href="https://github.com/your-username">GitHub</a> •
+    <a href="https://linkedin.com/in/your-profile">LinkedIn</a>
+  </p>
+</div>
