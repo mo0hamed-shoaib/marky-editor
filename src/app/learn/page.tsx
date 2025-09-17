@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -413,7 +414,7 @@ const App = () => {
                 <h4 className="font-semibold mb-2">AI Integration</h4>
                 <ul className="space-y-1 text-sm text-muted-foreground">
                   <li className="break-words">• Use AI to expand on your ideas</li>
-                  <li className="break-words">• Ask for "more details" on specific topics</li>
+              <li className="break-words">• Ask for &quot;more details&quot; on specific topics</li>
                   <li className="break-words">• Request structure improvements</li>
                   <li className="break-words">• Generate content for empty branches</li>
                 </ul>
@@ -425,9 +426,9 @@ const App = () => {
         {/* Call to Action */}
         <div className="text-center mt-8">
           <Button size="lg" asChild>
-            <a href="/">
+            <Link href="/">
               Start Creating Your Mindmap
-            </a>
+            </Link>
           </Button>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { Home, ArrowLeft, Search, Map } from 'lucide-react'
+import { Home, ArrowLeft, Map } from 'lucide-react'
 
 export default function NotFound() {
   return (
@@ -26,8 +26,8 @@ export default function NotFound() {
           Mindmap Not Found
         </h1>
         <p className="text-muted-foreground mb-8">
-          The page you're looking for seems to have wandered off the map. 
-          Don't worry, let's get you back on track!
+          The page you&apos;re looking for seems to have wandered off the map. 
+          Don&apos;t worry, let&apos;s get you back on track!
         </p>
 
         {/* Action Buttons */}
@@ -49,8 +49,8 @@ export default function NotFound() {
         {/* Fun Fact */}
         <div className="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-lg">
           <p className="text-sm text-muted-foreground">
-            <strong className="text-foreground">Fun fact:</strong> The term "mindmap" was coined by Tony Buzan in the 1970s. 
-            It's a visual thinking tool that helps organize information in a radial, non-linear manner.
+            <strong className="text-foreground">Fun fact:</strong> The term &quot;mindmap&quot; was coined by Tony Buzan in the 1970s. 
+            It&apos;s a visual thinking tool that helps organize information in a radial, non-linear manner.
           </p>
         </div>
       </div>
